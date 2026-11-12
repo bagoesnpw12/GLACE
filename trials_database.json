@@ -1,0 +1,37 @@
+{
+  "trials": [
+    {
+      "id": "trial_mwbrb1ws",
+      "fingerprint": "fp_elm8u2fl2w_50100646",
+      "email": "trial.rb1ws@glace.id",
+      "name": "Trial Engineer #b1ws",
+      "role": "Free Trial",
+      "trialStartedAt": "2026-11-11T06:47:18.124Z",
+      "trialExpiresAt": "2026-11-14T06:47:18.124Z",
+      "durationMs": 259200000,
+      "isExpired": false
+    },
+    {
+      "id": "trial_mwd76xeq",
+      "fingerprint": "test_fp",
+      "email": "trial.76xeq@glace.id",
+      "name": "Trial Engineer #6xeq",
+      "role": "Free Trial",
+      "trialStartedAt": "2026-11-12T06:59:45.698Z",
+      "trialExpiresAt": "2026-11-15T06:59:45.698Z",
+      "durationMs": 259200000,
+      "isExpired": false
+    },
+    {
+      "id": "trial_mwd77f94",
+      "fingerprint": "device_chk_1",
+      "email": "trial.77f94@glace.id",
+      "name": "Trial Engineer #7f94",
+      "role": "Free Trial",
+      "trialStartedAt": "2026-11-12T07:00:08.824Z",
+      "trialExpiresAt": "2026-11-15T07:00:08.824Z",
+      "durationMs": 259200000,
+      "isExpired": false
+    }
+  ]
+}
