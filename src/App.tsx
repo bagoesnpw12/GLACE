@@ -4,6 +4,8 @@ import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
 import { CoEngineerModule } from './components/CoEngineerModule';
 import { ProjectIntelligenceModule } from './components/ProjectIntelligenceModule';
+import { AssetIntelligenceModule } from './components/AssetIntelligenceModule';
+import { DocumentIntelligenceModule } from './components/DocumentIntelligenceModule';
 import { AssetAndDocIntelligenceModule } from './components/AssetAndDocIntelligenceModule';
 import { GlaceCommerceModule } from './components/GlaceCommerceModule';
 import { GlaceAcademyModule } from './components/GlaceAcademyModule';
@@ -41,7 +43,19 @@ function AppContent() {
 
   const [viewMode, setViewMode] = useState<'landing' | 'login' | 'signup' | 'app'>('landing');
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
-  const [selectedSubItem, setSelectedSubItem] = useState<string>('My Drawings');
+  const [selectedSubItem, setSelectedSubItem] = useState<string>('');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    return localStorage.getItem('glace_sidebar_collapsed') === 'true';
+  });
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
+
+  const toggleSidebarCollapse = () => {
+    setIsSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('glace_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
 
   // Menangani callback redirect dari Google OAuth 2.0 resmi (Token JWT / Error)
   useEffect(() => {
@@ -281,7 +295,7 @@ function AppContent() {
 
   // Render Dashboard
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-[#0b0d13] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+    <div className="flex min-h-screen bg-[#F5F7FA] dark:bg-[#0b0d13] text-[#172033] dark:text-slate-100 transition-colors duration-300">
       {/* Sidebar Navigation */}
       <Sidebar
         currentTab={currentTab}
@@ -289,6 +303,13 @@ function AppContent() {
         selectedSubItem={selectedSubItem}
         onSelectSubItem={(sub) => setSelectedSubItem(sub)}
         onViewLanding={() => setViewMode('landing')}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
+        isMobileDrawerOpen={isMobileDrawerOpen}
+        onCloseMobileDrawer={() => setIsMobileDrawerOpen(false)}
+        userName={userName}
+        userEmail={userEmail}
+        isTrial={isTrialAccount}
       />
 
       {/* Main Content Area */}
@@ -300,57 +321,87 @@ function AppContent() {
           isTrial={isTrialAccount}
           trialText={trialDisplayText}
           onUpgradePlan={() => setCurrentTab('enterprise-solutions')}
+          onToggleMobileMenu={() => setIsMobileDrawerOpen(prev => !prev)}
         />
 
-        <main className="flex-1 p-8 max-w-7xl w-full mx-auto">
-          {currentTab === 'dashboard' && (
-            <DashboardView
-              userName={userName}
-              onNavigateModule={(modId) => setCurrentTab(modId)}
-              activities={activities}
-            />
-          )}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">
+          <div key={`${currentTab}-${selectedSubItem}`} className="animate-glace-page">
+            {currentTab === 'dashboard' && (
+              <DashboardView
+                userName={userName}
+                onNavigateModule={(modId) => setCurrentTab(modId)}
+                activities={activities}
+              />
+            )}
 
-          {currentTab === 'co-engineer' && (
-            <CoEngineerModule 
-              onAddActivity={addActivity}
-              selectedSubItem={selectedSubItem}
-              onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-            />
-          )}
+            {currentTab === 'co-engineer' && (
+              <CoEngineerModule 
+                onAddActivity={addActivity}
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                activities={activities}
+              />
+            )}
 
-          {currentTab === 'project-intelligence' && (
-            <ProjectIntelligenceModule onAddActivity={addActivity} />
-          )}
+            {currentTab === 'project-intelligence' && (
+              <ProjectIntelligenceModule 
+                onAddActivity={addActivity} 
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+              />
+            )}
 
-          {currentTab === 'asset-intelligence' && (
-            <AssetAndDocIntelligenceModule type="asset" onAddActivity={addActivity} />
-          )}
+            {currentTab === 'asset-intelligence' && (
+              <AssetIntelligenceModule 
+                onAddActivity={addActivity}
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+              />
+            )}
 
-          {currentTab === 'document-intelligence' && (
-            <AssetAndDocIntelligenceModule type="document" onAddActivity={addActivity} />
-          )}
+            {currentTab === 'document-intelligence' && (
+              <DocumentIntelligenceModule 
+                onAddActivity={addActivity}
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+              />
+            )}
 
-          {currentTab === 'glace-commerce' && (
-            <GlaceCommerceModule onAddActivity={addActivity} />
-          )}
+            {currentTab === 'glace-commerce' && (
+              <GlaceCommerceModule 
+                onAddActivity={addActivity} 
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+              />
+            )}
 
-          {currentTab === 'glace-academy' && (
-            <GlaceAcademyModule onAddActivity={addActivity} />
-          )}
+            {currentTab === 'glace-academy' && (
+              <GlaceAcademyModule 
+                onAddActivity={addActivity}
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+              />
+            )}
 
-          {currentTab === 'enterprise-solutions' && (
-            <EnterpriseSolutionsView onAddActivity={addActivity} />
-          )}
+            {currentTab === 'enterprise-solutions' && (
+              <EnterpriseSolutionsView 
+                onAddActivity={addActivity} 
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+              />
+            )}
 
-          {currentTab === 'settings' && (
-            <SettingsView
-              userName={userName}
-              userEmail={userEmail}
-              onUpdateUser={handleUpdateUser}
-              onAddActivity={addActivity}
-            />
-          )}
+            {currentTab === 'settings' && (
+              <SettingsView
+                userName={userName}
+                userEmail={userEmail}
+                onUpdateUser={handleUpdateUser}
+                onAddActivity={addActivity}
+                selectedSubItem={selectedSubItem}
+                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+              />
+            )}
+          </div>
         </main>
 
         {/* Footer */}

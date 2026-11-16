@@ -1,592 +1,516 @@
-import React, { useState } from 'react';
-import { 
-  Paperclip, 
-  Send, 
-  ChevronRight,
-  MoreHorizontal,
-  Clock,
-  Menu,
-  Download,
-  Share2,
-  Sparkles,
-  Plus,
-  Palette,
-  ChevronDown,
-  FileCode,
-  MousePointer,
-  Hand,
-  Crop,
-  Pencil,
-  MessageSquare,
-  Image as ImageIcon,
-  Star,
-  Undo2,
-  Redo2,
-  HelpCircle,
-  Smartphone,
-  Globe,
-  Mic,
-  ArrowUp
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { DrawingProject, DrawingItem, DrawingElement, DrawingLayer } from '../types/drawing';
+import { ActivityItem } from '../types';
+import { CoEngineerDashboardView, ChatMessage } from './drawings/CoEngineerDashboardView';
+import { EngineeringCanvasModal } from './drawings/EngineeringCanvasModal';
+import { MyDrawingsView } from './drawings/MyDrawingsView';
+import { DrawingProjectsView } from './drawings/DrawingProjectsView';
+import { DrawingWorkspaceView } from './drawings/DrawingWorkspaceView';
+import { AIDrawingAssistantView } from './drawings/AIDrawingAssistantView';
+import { DrawingComparisonView } from './drawings/DrawingComparisonView';
+import { EngineeringIntelligenceView } from './drawings/EngineeringIntelligenceView';
+import { DrawingTypesView } from './drawings/DrawingTypesView';
+import { ImportExportView } from './drawings/ImportExportView';
+import { DrawingControlView } from './drawings/DrawingControlView';
 
 interface CoEngineerProps {
   onAddActivity: (activity: string, module: string) => void;
   selectedSubItem?: string;
   onSelectSubItem?: (item: string) => void;
-}
-
-interface MessageItem {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
+  activities?: ActivityItem[];
 }
 
 export const CoEngineerModule: React.FC<CoEngineerProps> = ({ 
   onAddActivity, 
-  selectedSubItem,
-  onSelectSubItem 
+  selectedSubItem = '',
+  onSelectSubItem,
+  activities = []
 }) => {
-  // State: 'home' (sebelum kirim: input box mirip gambar 1 dalam tema terang + 9 cards + recent conversations)
-  // vs 'canvas' (setelah kirim: tampilan studio canvas mirip gambar 2 dalam tema terang)
-  const [viewState, setViewState] = useState<'home' | 'canvas'>('home');
-  const [prompt, setPrompt] = useState('');
-  const [activeTab, setActiveTab] = useState<'app' | 'web'>('app');
-  const [currentProjectTitle, setCurrentProjectTitle] = useState('Peluncur Aplikasi Mandiri');
+  const [activeDrawingId, setActiveDrawingId] = useState<string | null>(null);
 
-  // Messages inside canvas view
-  const [messages, setMessages] = useState<MessageItem[]>([
-    {
-      id: '1',
-      role: 'user',
-      content: 'jalankan aplikasi',
-      timestamp: '11:20 AM'
-    },
-    {
-      id: '2',
-      role: 'assistant',
-      content: `Berikut beberapa contoh ide yang bisa kita mulai:\n\n• Aplikasi E-Commerce / Belanja Online\n  (Beranda produk, kategori, keranjang, checkout)\n\n• Aplikasi Keuangan / Dompet Digital\n  (Saldo, transfer, riwayat transaksi, analitik pengeluaran)\n\n• Aplikasi Manajemen Tugas / Produktivitas\n  (Daftar tugas, kalender, pelacak kebiasaan)\n\n• Ide aplikasi kustom Anda sendiri\n\nSilakan pilih atau jelaskan konsep aplikasi yang Anda inginkan!`,
-      timestamp: '11:20 AM'
+  // MySQL Data State
+  const [projects, setProjects] = useState<DrawingProject[]>([]);
+  const [drawings, setDrawings] = useState<DrawingItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // State Kanvas Engineering Ekstraksi Visual (Screenshot Referensi 2)
+  const [isCanvasOpen, setIsCanvasOpen] = useState(false);
+  const [canvasProjectTitle, setCanvasProjectTitle] = useState('Peluncur Aplikasi Mandiri');
+  const [canvasElements, setCanvasElements] = useState<DrawingElement[]>([]);
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
+
+  // AI Assistant Chat State (Persisten di tingkat Module agar tidak hilang)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  // Fetch Projects & Drawings from MySQL Backend
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [projRes, drawRes] = await Promise.all([
+        fetch('http://localhost:3001/api/drawings/projects'),
+        fetch('http://localhost:3001/api/drawings')
+      ]);
+
+      if (projRes.ok) {
+        const pData = await projRes.json();
+        if (pData.success && pData.projects) {
+          setProjects(pData.projects);
+        }
+      }
+
+      if (drawRes.ok) {
+        const dData = await drawRes.json();
+        if (dData.success && dData.drawings) {
+          setDrawings(dData.drawings);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching drawing data from MySQL:', err);
+    } finally {
+      setIsLoading(false);
     }
-  ]);
-
-  const [conversations, setConversations] = useState([
-    { id: '1', title: 'Calculated load for Single Line Diagram Substation', discipline: 'Electrical', lastUpdated: '10 mins ago' },
-    { id: '2', title: 'P&ID revision comparison & valve tags detection', discipline: 'Process', lastUpdated: '2 hours ago' },
-    { id: '3', title: 'Civil structural beam deflection analysis (SNI 2847)', discipline: 'Civil', lastUpdated: '1 day ago' },
-    { id: '4', title: 'HVAC Ducting static pressure loss review', discipline: 'HVAC', lastUpdated: '2 days ago' },
-  ]);
-
-  // 9 Cards as originally requested
-  const cards = [
-    {
-      num: '01',
-      title: 'My Drawings',
-      desc: 'Semua gambar teknik milik Anda, lengkap dengan filter revisi dan status.',
-    },
-    {
-      num: '02',
-      title: 'Drawing Projects',
-      desc: 'Kelompokkan gambar per proyek, tim, dan tenggat pekerjaan.',
-    },
-    {
-      num: '03',
-      title: 'Drawing Workspace',
-      desc: 'Area kerja untuk melihat, menandai, dan menyunting gambar.',
-    },
-    {
-      num: '04',
-      title: 'AI Drawing Assistant',
-      desc: 'Tanya jawab dan ekstraksi data langsung dari isi gambar dengan AI.',
-    },
-    {
-      num: '05',
-      title: 'Drawing Comparison',
-      desc: 'Bandingkan dua revisi dan sorot setiap perubahan yang terjadi.',
-    },
-    {
-      num: '06',
-      title: 'Engineering Intelligence',
-      desc: 'Analisis dimensi, material, dan potensi masalah pada desain.',
-    },
-    {
-      num: '07',
-      title: 'Drawing Types',
-      desc: 'Atur tipe gambar: mekanikal, sipil, listrik, dan diagram proses.',
-    },
-    {
-      num: '08',
-      title: 'Import & Export',
-      desc: 'Impor DWG, DXF, atau PDF dan ekspor ke format kerja lainnya.',
-    },
-    {
-      num: '09',
-      title: 'Drawing Control',
-      desc: 'Kontrol revisi, alur persetujuan, dan riwayat dokumen gambar.',
-    },
-  ];
-
-  // Submit from Home view -> changes view to Canvas view
-  const handleHomeSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
-
-    const userText = prompt;
-    setCurrentProjectTitle(userText.length > 25 ? userText.slice(0, 25) + '...' : userText);
-
-    const userMsg: MessageItem = {
-      id: String(Date.now()),
-      role: 'user',
-      content: userText,
-      timestamp: 'Baru saja'
-    };
-
-    const aiMsg: MessageItem = {
-      id: String(Date.now() + 1),
-      role: 'assistant',
-      content: `Berikut beberapa contoh ide arsitektur & komponen rekayasa yang bisa kita mulai untuk "${userText}":\n\n• Arsitektur Modular & Workflow\n  (Alur input, pemrosesan logika, kontrol sistem & validasi)\n\n• Struktur Data & Spesifikasi Parameter\n  (Atribut teknis, standar keselamatan SNI/IEC, batas toleransi)\n\n• Modul Antarmuka / Dasbor Kontrol\n  (Panel visualisasi status live, grafik pemantauan, form konfigurasi)\n\n• Integrasi Sistem Otomasi & Ekspor Berkas\n\nSilakan tentukan modul mana yang ingin Anda prioritaskan untuk dibuat lebih lanjut!`,
-      timestamp: 'Baru saja'
-    };
-
-    setMessages([userMsg, aiMsg]);
-    setConversations([
-      {
-        id: String(Date.now()),
-        title: userText,
-        discipline: 'Engineering AI',
-        lastUpdated: 'Just now',
-      },
-      ...conversations,
-    ]);
-
-    setViewState('canvas');
-    onAddActivity(`Co Engineer prompt: ${userText.slice(0, 35)}...`, 'Co Engineer');
-    setPrompt('');
   };
 
-  // Follow-up chat inside Canvas
-  const handleCanvasSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!prompt.trim()) return;
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    const followUp = prompt;
-    const userMsg: MessageItem = {
-      id: String(Date.now()),
-      role: 'user',
-      content: followUp,
-      timestamp: 'Baru saja'
-    };
+  // When selectedSubItem changes, update activeDrawingId
+  useEffect(() => {
+    if (selectedSubItem === 'Drawing Workspace' && !activeDrawingId && drawings.length > 0) {
+      setActiveDrawingId(drawings[0].id);
+    } else if (selectedSubItem !== 'Drawing Workspace' && activeDrawingId) {
+      setActiveDrawingId(null);
+    }
+  }, [selectedSubItem]);
 
-    const aiMsg: MessageItem = {
-      id: String(Date.now() + 1),
-      role: 'assistant',
-      content: `Memproses permintaan: "${followUp}"...\n\n✅ Spesifikasi rekayasa diperbarui.\n✅ Layout kanvas & blok diagram telah disesuaikan dengan parameter yang Anda tentukan.\n\nApakah ada elemen desain atau koneksi data lain yang ingin Anda tambahkan?`,
-      timestamp: 'Baru saja'
-    };
-
-    setMessages((prev) => [...prev, userMsg, aiMsg]);
-    onAddActivity(`Co Engineer Canvas: ${followUp.slice(0, 30)}...`, 'Co Engineer');
-    setPrompt('');
-  };
-
-  const handleCardClick = (title: string) => {
+  // Open Drawing in CAD Workspace
+  const handleOpenDrawing = (drawingId: string) => {
+    setActiveDrawingId(drawingId);
     if (onSelectSubItem) {
-      onSelectSubItem(title);
+      onSelectSubItem('Drawing Workspace');
     }
-    setPrompt(`Buka dan analisis ${title}`);
+    const found = drawings.find(d => d.id === drawingId);
+    if (found) {
+      onAddActivity(`Membuka Drawing Workspace: ${found.title}`, 'Co Engineer');
+    }
+  };
+
+  // Kirim Pertanyaan AI - Langsung tampil di Dashboard Co Engineer & Render Gambar ke Kanvas jika diminta
+  const handleSendChatMessage = async (userText: string) => {
+    if (!userText.trim()) return;
+
+    const userMsg: ChatMessage = {
+      id: String(Date.now()),
+      sender: 'user',
+      text: userText,
+      timestamp: 'Baru saja'
+    };
+
+    setChatMessages(prev => [...prev, userMsg]);
+    onAddActivity(`Co Engineer prompt: ${userText.slice(0, 35)}...`, 'Co Engineer');
+
+    const lower = userText.toLowerCase();
+
+    // Deteksi apakah pengguna meminta pembuatan/generate gambar
+    const isImageGenerationRequest = 
+      lower.includes('gambar') ||
+      lower.includes('buatkan gambar') ||
+      lower.includes('gambarkan') ||
+      lower.includes('buat gambar') ||
+      lower.includes('generate image') ||
+      lower.includes('lukis') ||
+      lower.includes('foto') ||
+      lower.includes('diagram visual');
+
+    // Cek apakah prompt secara eksplisit meminta diagram, kanvas, atau rancangan visual
+    const isExplicitDesignRequest = 
+      isImageGenerationRequest ||
+      lower.includes('kanvas') || 
+      lower.includes('buat diagram') || 
+      lower.includes('buka kanvas') || 
+      lower.includes('visualisasikan') || 
+      lower.includes('rancang diagram') ||
+      lower.includes('desain p&id') ||
+      lower.includes('buka workspace');
+
+    // JIKA USER MEMINTA GENERATE GAMBAR:
+    if (isImageGenerationRequest) {
+      setCanvasProjectTitle(userText.length > 25 ? userText.slice(0, 25) + '...' : userText);
+      setIsGeneratingImage(true);
+
+      // Jika user belum membuka kanvas, buka kanvas secara otomatis agar hasilnya terlihat di area kerja
+      setIsCanvasOpen(true);
+
+      try {
+        const res = await fetch('http://localhost:3001/api/coengineer/generate-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: userText,
+            width: 800,
+            height: 600
+          })
+        });
+
+        const data = await res.json();
+        if (data.success && data.imageUrl) {
+          // Buat elemen gambar baru untuk kanvas (hanya jika gambar benar-benar lolos verifikasi backend)
+          const newImgElement: DrawingElement = {
+            id: 'img_ai_' + Date.now(),
+            type: 'image',
+            // Posisikan dengan offset berdasarkan jumlah elemen agar tidak bertumpuk jika sudah ada gambar sebelumnya
+            x: 80 + (canvasElements.length % 5) * 40,
+            y: 80 + (canvasElements.length % 5) * 30,
+            width: 440,
+            height: 330,
+            imageUrl: data.imageUrl,
+            stroke: '#2563eb',
+            strokeWidth: 2,
+            layerId: 'layer_1'
+          };
+
+          // Masukkan ke state kanvas (menghilangkan placeholder secara otomatis)
+          setCanvasElements(prev => [...prev, newImgElement]);
+
+          const aiReply: ChatMessage = {
+            id: String(Date.now() + 1),
+            sender: 'assistant',
+            text: `✅ Gambar untuk "${userText}" berhasil dibuat dan ditambahkan ke kanvas kerja.\n\nGambar ini sekarang dapat dipilih, dipindahkan, diubah ukurannya, atau diberi catatan teknik di toolbar.`,
+            timestamp: 'Baru saja'
+          };
+          setChatMessages(prev => [...prev, aiReply]);
+        } else {
+          // JIKA PROVIDER LIMIT / ERROR: Tampilkan pesan kegagalan di chat, JANGAN masukkan apapun ke kanvas!
+          const errorMsg = data.error || 'Layanan generate gambar tidak dapat memproses permintaan.';
+          const aiErrorReply: ChatMessage = {
+            id: String(Date.now() + 1),
+            sender: 'assistant',
+            text: `⚠️ Permintaan gambar belum dapat diproses: ${errorMsg}`,
+            timestamp: 'Baru saja'
+          };
+          setChatMessages(prev => [...prev, aiErrorReply]);
+        }
+      } catch (err: any) {
+        console.error('Error generating image:', err);
+        const errorReply: ChatMessage = {
+          id: String(Date.now() + 1),
+          sender: 'assistant',
+          text: `⚠️ Gagal menghubungi layanan AI: ${err.message || 'Koneksi jaringan terganggu'}. Silakan coba lagi.`,
+          timestamp: 'Baru saja'
+        };
+        setChatMessages(prev => [...prev, errorReply]);
+      } finally {
+        setIsGeneratingImage(false);
+      }
+      return;
+    }
+
+    // Menghasilkan respon cerdas AI untuk teks biasa
+    let replyText = '';
+    let offerCanvas = false;
+
+    if (lower.includes('baut') || lower.includes('lubang') || lower.includes('sni 2847')) {
+      replyText = `Berdasarkan standar SNI 2847 & standar teknis rekayasa:\n• Toleransi lubang baut standar: +0.8 mm s.d. +1.6 mm\n• Jarak tepi minimum: 1.5 x diameter baut nominal\n• Torsi pengencangan baut mutu tinggi (A325): 450 Nm\n\nAnalisis visual dapat ditautkan ke kanvas rekayasa bila Anda ingin meninjau denah sambungan struktur.`;
+      offerCanvas = true;
+    } else if (lower.includes('dimensi') || lower.includes('ukuran') || lower.includes('panjang')) {
+      replyText = `Hasil pembacaan dimensi rekayasa:\n• Panjang Balok: 6,000 mm\n• Tinggi Penampang: 400 mm\n• Lebar Flens: 200 mm\n• Tebal Pelat Badan (Web): 8 mm\n\nSemua dimensi terverifikasi berada dalam batas toleransi pabrikasi.`;
+      offerCanvas = true;
+    } else if (lower.includes('jalankan aplikasi') || lower.includes('aplikasi') || lower.includes('sistem')) {
+      replyText = `Berikut beberapa contoh ide arsitektur & komponen rekayasa yang bisa kita mulai untuk "${userText}":\n\n• Arsitektur Modular & Workflow\n  (Alur input, pemrosesan logika, kontrol sistem & validasi)\n\n• Struktur Data & Spesifikasi Parameter\n  (Atribut teknis, standar keselamatan SNI/IEC, batas toleransi)\n\n• Modul Antarmuka / Dasbor Kontrol\n  (Panel visualisasi status live, grafik pemantauan, form konfigurasi)\n\n• Integrasi Sistem Otomasi & Ekspor Berkas\n\nSilakan tentukan modul mana yang ingin Anda prioritaskan!`;
+      offerCanvas = true;
+    } else {
+      replyText = `Saya telah memproses pertanyaan Anda terkait "${userText}".\n\n• Status Validasi: Memenuhi parameter acuan rekayasa GLACE.\n• Catatan Rekayasa: Tidak ditemukan konflik spesifikasi terhadap basis data proyek saat ini.\n\nApakah Anda memerlukan perhitungan lanjutan, ekspor berkas, atau ingin memvisualisasikannya di kanvas?`;
+      offerCanvas = true;
+    }
+
+    const aiMsg: ChatMessage = {
+      id: String(Date.now() + 1),
+      sender: 'assistant',
+      text: replyText,
+      timestamp: 'Baru saja',
+      actionOffer: offerCanvas ? {
+        type: 'open_canvas',
+        title: userText.length > 25 ? userText.slice(0, 25) + '...' : userText
+      } : undefined
+    };
+
+    setChatMessages(prev => [...prev, aiMsg]);
+
+    // HANYA buka kanvas jika pengguna SECARA EKSPLISIT memintanya
+    if (isExplicitDesignRequest) {
+      setCanvasProjectTitle(userText.length > 25 ? userText.slice(0, 25) + '...' : userText);
+      setIsCanvasOpen(true);
+    }
+  };
+
+  // Create Project in MySQL
+  const handleCreateProject = async (projectData: Partial<DrawingProject>) => {
+    try {
+      const email = localStorage.getItem('glace_user_email') || 'all';
+      const res = await fetch('http://localhost:3001/api/drawings/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...projectData,
+          email
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.project) {
+        setProjects(prev => [data.project, ...prev]);
+        onAddActivity(`Membuat Drawing Project: ${data.project.name}`, 'Co Engineer');
+      }
+    } catch (err) {
+      console.error('Failed to create project:', err);
+    }
+  };
+
+  // Create New Drawing in MySQL
+  const handleNewDrawing = async (drawingData: Partial<DrawingItem>) => {
+    try {
+      const email = localStorage.getItem('glace_user_email') || 'all';
+      const res = await fetch('http://localhost:3001/api/drawings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...drawingData,
+          email
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.drawing) {
+        setDrawings(prev => [data.drawing, ...prev]);
+        onAddActivity(`Membuat Drawing baru: ${data.drawing.title}`, 'Co Engineer');
+        handleOpenDrawing(data.drawing.id);
+      }
+    } catch (err) {
+      console.error('Failed to create drawing:', err);
+    }
+  };
+
+  // Import Drawing
+  const handleImportDrawing = async (file: File) => {
+    try {
+      const title = file.name.replace(/\.[^/.]+$/, "");
+      const email = localStorage.getItem('glace_user_email') || 'all';
+      const projectId = projects[0]?.id || 'proj_1';
+      
+      const res = await fetch('http://localhost:3001/api/drawings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: projectId,
+          email,
+          title: title || 'Gambar Impor Baru',
+          discipline: 'Mekanikal',
+          revision: 'Rev A',
+          status: 'Draf'
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.drawing) {
+        setDrawings(prev => [data.drawing, ...prev]);
+        onAddActivity(`Mengimpor gambar: ${file.name}`, 'Co Engineer');
+        handleOpenDrawing(data.drawing.id);
+      }
+    } catch (err) {
+      console.error('Failed to import drawing:', err);
+    }
+  };
+
+  // Save changes to MySQL from Workspace
+  const handleSaveDrawing = async (elements: DrawingElement[], layers: DrawingLayer[]) => {
+    if (!activeDrawingId) return;
+    try {
+      const res = await fetch(`http://localhost:3001/api/drawings/${activeDrawingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          elements_json: JSON.stringify(elements),
+          layers_json: JSON.stringify(layers)
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.drawing) {
+        setDrawings(prev => prev.map(d => d.id === activeDrawingId ? data.drawing : d));
+        onAddActivity(`Menyimpan perubahan kanvas: ${data.drawing.title}`, 'Co Engineer');
+      }
+    } catch (err) {
+      console.error('Failed to save drawing:', err);
+      throw err;
+    }
   };
 
   /* =========================================================================
-     VIEW 2: CANVAS VIEW (Persis Gambar 2 tapi dengan warna tema terang yang konsisten)
+     NAVIGASI ROUTING CO ENGINEER:
+     - '' atau 'Dashboard' -> Dashboard Co Engineer
+     - 'My Drawings'       -> Halaman Daftar Gambar (Gambar Saya)
+     - 'Drawing Projects'  -> Halaman Daftar Proyek (Proyek Menggambar)
+     - 'Drawing Workspace' -> Editor Menggambar (Ruang Kerja Menggambar)
+     - 'AI Drawing Assistant' -> Asisten Menggambar AI
      ========================================================================= */
-  if (viewState === 'canvas') {
+
+  // 1. Drawing Workspace View (Ruang Kerja Menggambar CAD)
+  if (selectedSubItem === 'Drawing Workspace' || activeDrawingId) {
+    const currentDrawing = drawings.find(d => d.id === activeDrawingId) || drawings[0] || {
+      id: 'draw_default',
+      project_id: 'proj_1',
+      title: 'Denah Lantai 1',
+      discipline: 'Sipil',
+      revision: 'Rev B',
+      status: 'Disetujui'
+    };
+
     return (
-      <div className="h-[calc(100vh-8.5rem)] min-h-[580px] bg-slate-100 flex flex-col font-sans select-none overflow-hidden relative rounded-xl border border-slate-200/90 shadow-xs">
-        {/* Workspace Canvas with Dot-Grid Background in Light Mode */}
-        <div className="flex-1 relative flex overflow-hidden bg-slate-50 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:20px_20px]">
-          {/* Floating Left Chat Sidebar Panel */}
-          <div className="w-[360px] max-w-[90vw] h-full bg-white/95 backdrop-blur-md border-r border-slate-200 flex flex-col z-10 shadow-lg">
-            {/* Chat Panel Header */}
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setViewState('home')}
-                  className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
-                  title="Kembali ke Co Engineer Home"
-                >
-                  <Menu className="w-3.5 h-3.5" />
-                </button>
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-                <span className="font-semibold text-slate-800 truncate max-w-[170px]">{currentProjectTitle}</span>
-              </div>
-              <button 
-                type="button"
-                onClick={() => setViewState('home')}
-                className="text-[11px] text-blue-600 hover:underline font-medium"
-              >
-                Tutup
-              </button>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 text-xs">
-              {messages.map((msg) => (
-                <div key={msg.id} className="space-y-1.5">
-                  {msg.role === 'user' ? (
-                    <div className="flex justify-end">
-                      <div className="bg-slate-900 text-white px-3.5 py-2 rounded-2xl rounded-tr-xs max-w-[85%] font-medium shadow-2xs">
-                        {msg.content}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white shrink-0 mt-0.5 shadow-2xs">
-                        <Sparkles className="w-3.5 h-3.5" />
-                      </div>
-                      <div className="bg-slate-50 border border-slate-200 text-slate-800 p-3.5 rounded-2xl rounded-tl-xs whitespace-pre-line leading-relaxed shadow-2xs">
-                        {msg.content}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Canvas Chat Input Bar */}
-            <form onSubmit={handleCanvasSend} className="p-3 border-t border-slate-100 bg-white">
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus-within:border-blue-500 focus-within:bg-white transition-colors">
-                <textarea
-                  rows={2}
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="What would you like to change or create?"
-                  className="w-full bg-transparent text-xs text-slate-800 placeholder-slate-400 resize-none focus:outline-hidden"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleCanvasSend(e);
-                    }
-                  }}
-                />
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1 text-slate-400 text-xs">
-                  <div className="flex items-center gap-2">
-                    <button type="button" className="p-1 hover:text-slate-700 transition-colors">
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="text-slate-300">/</span>
-                    <button type="button" className="p-1 hover:text-slate-700 transition-colors">
-                      <Palette className="w-3.5 h-3.5" />
-                    </button>
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-slate-200 text-[10px] text-slate-700 font-medium cursor-pointer shadow-2xs">
-                      <Sparkles className="w-2.5 h-2.5 text-blue-500" />
-                      <span>Balanced</span>
-                      <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-6 h-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors shadow-2xs"
-                    title="Kirim instruksi"
-                  >
-                    <Send className="w-3 h-3" />
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          {/* Canvas Center Work Area */}
-          <div className="flex-1 flex items-center justify-center p-8 relative">
-            <div className="text-center p-8 rounded-2xl border border-dashed border-slate-300 bg-white/80 backdrop-blur-xs max-w-md shadow-2xs">
-              <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-2xs">
-                <FileCode className="w-6 h-6" />
-              </div>
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                Kanvas Rancangan Engineering Aktif
-              </h3>
-              <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                Ketik instruksi pada kolom chat di sebelah kiri untuk menghasilkan rancangan, diagram P&ID, Single Line Diagram, atau komponen aplikasi interaktif secara otomatis.
-              </p>
-            </div>
-
-            {/* Right Canvas Toolbar (Matching Gambar 2 in Light Theme) */}
-            <aside className="absolute right-4 top-1/2 -translate-y-1/2 bg-white border border-slate-200 rounded-xl p-1.5 flex flex-col gap-1.5 shadow-md text-slate-500 z-10">
-              <button className="p-2 rounded-lg bg-blue-50 text-blue-600 font-semibold shadow-2xs" title="Select (V)">
-                <MousePointer className="w-4 h-4 fill-current" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors" title="Hand Tool (H)">
-                <Hand className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors" title="Crop / Frame">
-                <Crop className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors" title="Pencil / Draw">
-                <Pencil className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors" title="Comments">
-                <MessageSquare className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors" title="Add Media / Image">
-                <ImageIcon className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors" title="Color Theme">
-                <Palette className="w-4 h-4" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-slate-100 hover:text-slate-800 transition-colors" title="Bookmark / Star">
-                <Star className="w-4 h-4" />
-              </button>
-            </aside>
-
-            {/* Bottom Right Zoom & History Controls */}
-            <div className="absolute right-4 bottom-4 flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-500 shadow-md">
-              <button className="p-1 hover:text-slate-800 transition-colors" title="Undo">
-                <Undo2 className="w-3.5 h-3.5" />
-              </button>
-              <button className="p-1 hover:text-slate-800 transition-colors" title="Redo">
-                <Redo2 className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-slate-200 px-1">|</span>
-              <span className="font-mono text-[11px] font-semibold text-slate-700">75%</span>
-              <button className="p-1 hover:text-slate-800 transition-colors" title="Help">
-                <HelpCircle className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DrawingWorkspaceView
+        drawing={currentDrawing}
+        onBack={() => {
+          setActiveDrawingId(null);
+          if (onSelectSubItem) {
+            onSelectSubItem(''); // Kembali ke Dashboard Co Engineer
+          }
+        }}
+        onSave={handleSaveDrawing}
+      />
     );
   }
 
-  /* =========================================================================
-     VIEW 1: HOME VIEW (Bentuk Gambar 1: Welcome to Stitch/Co Engineer hero box dengan kontrol lengkap, 
-     tetap dengan warna terang yang lama + 9 cards + recent conversations TIDAK DIHAPUS)
-     ========================================================================= */
+  // 2. Drawing Projects View (Proyek Menggambar)
+  if (selectedSubItem === 'Drawing Projects') {
+    return (
+      <DrawingProjectsView
+        projects={projects}
+        drawings={drawings}
+        onOpenDrawing={handleOpenDrawing}
+        onCreateProject={handleCreateProject}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  // 3. My Drawings View (Gambar Saya)
+  if (selectedSubItem === 'My Drawings') {
+    return (
+      <MyDrawingsView
+        drawings={drawings}
+        projects={projects}
+        onOpenDrawing={handleOpenDrawing}
+        onImportDrawing={handleImportDrawing}
+        onNewDrawing={handleNewDrawing}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  // 4. AI Drawing Assistant
+  if (selectedSubItem === 'AI Drawing Assistant') {
+    return (
+      <AIDrawingAssistantView
+        drawings={drawings}
+        onBack={() => onSelectSubItem && onSelectSubItem('')}
+        onOpenDrawing={handleOpenDrawing}
+      />
+    );
+  }
+
+  // 5. Drawing Comparison
+  if (selectedSubItem === 'Drawing Comparison') {
+    return (
+      <DrawingComparisonView
+        drawings={drawings}
+        onBack={() => onSelectSubItem && onSelectSubItem('')}
+        onOpenDrawing={handleOpenDrawing}
+      />
+    );
+  }
+
+  // 6. Engineering Intelligence
+  if (selectedSubItem === 'Engineering Intelligence') {
+    return (
+      <EngineeringIntelligenceView
+        drawings={drawings}
+        onBack={() => onSelectSubItem && onSelectSubItem('')}
+        onOpenDrawing={handleOpenDrawing}
+      />
+    );
+  }
+
+  // 7. Drawing Types
+  if (selectedSubItem === 'Drawing Types') {
+    return (
+      <DrawingTypesView
+        onBack={() => onSelectSubItem && onSelectSubItem('')}
+      />
+    );
+  }
+
+  // 8. Import & Export
+  if (selectedSubItem === 'Import & Export') {
+    return (
+      <ImportExportView
+        drawings={drawings}
+        onBack={() => onSelectSubItem && onSelectSubItem('')}
+        onImportSuccess={fetchData}
+      />
+    );
+  }
+
+  // 9. Drawing Control
+  if (selectedSubItem === 'Drawing Control') {
+    return (
+      <DrawingControlView
+        drawings={drawings}
+        onBack={() => onSelectSubItem && onSelectSubItem('')}
+        onOpenDrawing={handleOpenDrawing}
+      />
+    );
+  }
+
+  // 10. HALAMAN UTAMA DASHBOARD CO ENGINEER
+  // Jika pengguna secara eksplisit meminta kanvas dibuka, tampilkan kanvas modal / view dengan opsi "Tutup" untuk kembali
+  if (isCanvasOpen) {
+    return (
+      <EngineeringCanvasModal
+        isOpen={isCanvasOpen}
+        onClose={() => setIsCanvasOpen(false)}
+        projectTitle={canvasProjectTitle}
+        messages={chatMessages}
+        onSendMessage={handleSendChatMessage}
+        canvasElements={canvasElements}
+        setCanvasElements={setCanvasElements}
+        isGeneratingImage={isGeneratingImage}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-8 pb-12 max-w-6xl mx-auto">
-      {/* Title */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-          Co Engineer
-        </h1>
-        {selectedSubItem && (
-          <p className="text-xs font-medium text-blue-600 mt-1 flex items-center gap-1">
-            <span>Sub-menu:</span>
-            <span className="font-semibold">{selectedSubItem}</span>
-          </p>
-        )}
-      </div>
-
-      {/* Hero Box Berbentuk Persis Gambar 1 (Welcome to Stitch.. input bar with App/Web, Balanced, Mic, ArrowUp) dalam Tema Terang Yang Lama */}
-      <div className="bg-[#f8faff] border border-blue-100/80 rounded-2xl p-6 sm:p-8 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Welcome to Co Engineer..
-          </h2>
-          <div className="flex items-center gap-2">
-            <button 
-              type="button"
-              onClick={() => {
-                setCurrentProjectTitle('Start with design');
-                setViewState('canvas');
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
-            >
-              <Plus className="w-3.5 h-3.5 text-slate-400" />
-              <span>Start with your design</span>
-            </button>
-            <button 
-              type="button"
-              onClick={() => {
-                setCurrentProjectTitle('Blank project');
-                setViewState('canvas');
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs"
-            >
-              <Plus className="w-3.5 h-3.5 text-slate-400" />
-              <span>Blank project</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Input Card Container persis Gambar 1 */}
-        <form 
-          onSubmit={handleHomeSend}
-          className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm hover:border-slate-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all flex flex-col justify-between min-h-[140px]"
-        >
-          <textarea
-            rows={2}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="jalankan aplikasi"
-            className="w-full bg-transparent text-sm text-slate-800 placeholder-slate-400 resize-none focus:outline-hidden font-normal leading-relaxed"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleHomeSend(e);
-              }
-            }}
-          />
-
-          {/* Bottom Bar: + button, [App] [Web], Palette, [Balanced], Mic, Send ArrowUp */}
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-2">
-            <div className="flex items-center gap-2.5">
-              <button 
-                type="button" 
-                className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
-                title="Tambahkan lampiran berkas"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-
-              {/* App / Web Toggle */}
-              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('app')}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                    activeTab === 'app'
-                      ? 'bg-white text-slate-900 shadow-2xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>App</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('web')}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
-                    activeTab === 'web'
-                      ? 'bg-white text-slate-900 shadow-2xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>Web</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              <button 
-                type="button" 
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
-                title="Theme & Style Palette"
-              >
-                <Palette className="w-4 h-4" />
-              </button>
-
-              {/* Balanced Selector */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-medium text-slate-700 cursor-pointer transition-colors">
-                <Sparkles className="w-3 h-3 text-blue-500" />
-                <span>Balanced</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </div>
-
-              <button 
-                type="button" 
-                className="text-slate-400 hover:text-slate-600 transition-colors p-1"
-                title="Voice input"
-              >
-                <Mic className="w-4 h-4" />
-              </button>
-
-              {/* Send Button (ArrowUp circle matching Gambar 1) */}
-              <button
-                type="submit"
-                className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-all shadow-2xs shrink-0 cursor-pointer"
-                title="Kirim (Enter)"
-              >
-                <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-
-      {/* Engineering Disciplines Grid (9 Cards - TIDAK DIHAPUS, TETAP ADA) */}
-      <div>
-        <h3 className="text-sm font-bold text-slate-900 mb-4 tracking-tight">
-          Engineering Disciplines
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {cards.map((card) => {
-            const isSelected = selectedSubItem === card.title;
-            return (
-              <div
-                key={card.num}
-                onClick={() => handleCardClick(card.title)}
-                className={`bg-white rounded-xl border p-5 transition-all cursor-pointer group flex flex-col justify-between ${
-                  isSelected 
-                    ? 'border-blue-500 ring-2 ring-blue-50 shadow-xs' 
-                    : 'border-slate-200/80 hover:border-slate-300 hover:shadow-2xs'
-                }`}
-              >
-                <div>
-                  <span className="text-xs font-semibold text-amber-500 font-mono block mb-2">
-                    {card.num}
-                  </span>
-                  <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                    {card.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                    {card.desc}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Recent Conversations Table (TIDAK DIHAPUS, TETAP ADA) */}
-      <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-            Recent Conversations
-          </h3>
-          <span className="text-xs text-slate-400">History</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50/50">
-                <th className="py-3 px-6">TITLE</th>
-                <th className="py-3 px-6">DISCIPLINE</th>
-                <th className="py-3 px-6">LAST UPDATED</th>
-                <th className="py-3 px-6 text-right">ACTION</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {conversations.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="py-3.5 px-6 font-semibold text-slate-800">
-                    {item.title}
-                  </td>
-                  <td className="py-3.5 px-6 text-slate-500">
-                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium">
-                      {item.discipline}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-6 text-slate-500 font-medium">
-                    {item.lastUpdated}
-                  </td>
-                  <td className="py-3.5 px-6 text-right">
-                    <button className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors">
-                      <MoreHorizontal className="w-4 h-4 inline-block" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <CoEngineerDashboardView
+      drawings={drawings}
+      projects={projects}
+      activities={activities.filter(a => a.module === 'Co Engineer' || a.module === 'Document Intelligence')}
+      onNavigateSubItem={(subItem) => {
+        if (onSelectSubItem) {
+          onSelectSubItem(subItem);
+        }
+      }}
+      onOpenDrawing={handleOpenDrawing}
+      onNewDrawingClick={() => {
+        if (onSelectSubItem) onSelectSubItem('My Drawings');
+      }}
+      onNewProjectClick={() => {
+        if (onSelectSubItem) onSelectSubItem('Drawing Projects');
+      }}
+      onImportClick={() => {
+        if (onSelectSubItem) onSelectSubItem('My Drawings');
+      }}
+      chatMessages={chatMessages}
+      onSendChatMessage={handleSendChatMessage}
+      onOpenCanvasExplicit={(title) => {
+        if (title) setCanvasProjectTitle(title);
+        setIsCanvasOpen(true);
+      }}
+      isLoading={isLoading}
+    />
   );
 };

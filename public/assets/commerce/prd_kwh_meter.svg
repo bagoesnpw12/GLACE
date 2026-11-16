@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <rect width="200" height="200" fill="#f8fafc" rx="16"/>
+  <!-- Digital KWH Meter Housing -->
+  <rect x="62" y="45" width="76" height="115" rx="12" fill="#ffffff" stroke="#64748b" stroke-width="2.5"/>
+  <!-- Top LCD Screen -->
+  <rect x="74" y="60" width="52" height="30" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="100" y="78" text-anchor="middle" font-family="monospace" font-size="10" font-weight="bold" fill="#0f172a">00428.5</text>
+  <text x="120" y="86" text-anchor="end" font-family="sans-serif" font-size="6" fill="#64748b">kWh</text>
+  <!-- Optical pulse port & Status LED -->
+  <circle cx="82" cy="104" r="3" fill="#ef4444"/>
+  <circle cx="94" cy="104" r="3" fill="#e2e8f0" stroke="#94a3b8"/>
+  <circle cx="106" cy="104" r="3" fill="#e2e8f0" stroke="#94a3b8"/>
+  <circle cx="118" cy="104" r="3" fill="#22c55e"/>
+  <!-- Push button nav (matching screenshot 2 round dots at bottom) -->
+  <circle cx="86" cy="128" r="5" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <circle cx="114" cy="128" r="5" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+</svg>

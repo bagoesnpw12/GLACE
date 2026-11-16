@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bookmark, ArrowUpRight, ArrowLeft, Clock, Sparkles } from 'lucide-react';
 
 interface LoginPageProps {
@@ -19,6 +19,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [error, setError] = useState(expiredMessage || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isTrialLoading, setIsTrialLoading] = useState(false);
+
+  useEffect(() => {
+    if (expiredMessage) {
+      setError(expiredMessage);
+    }
+  }, [expiredMessage]);
 
   // Validasi format email
   const isValidEmail = (val: string) => {

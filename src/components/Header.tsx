@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sun, Moon, Bell, ChevronDown, Sparkles, LogOut, Clock, ArrowUpRight } from 'lucide-react';
+import { Sun, Moon, Bell, ChevronDown, Sparkles, LogOut, Clock, ArrowUpRight, Menu } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   isTrial?: boolean;
   trialText?: string;
   onUpgradePlan?: () => void;
+  onToggleMobileMenu?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,21 +19,32 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   isTrial,
   trialText,
-  onUpgradePlan
+  onUpgradePlan,
+  onToggleMobileMenu
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
 
   return (
-    <header className="h-16 bg-white dark:bg-[#10131d] border-b border-slate-200/80 dark:border-slate-800 px-8 flex items-center justify-between sticky top-0 z-20 transition-colors duration-300">
+    <header className="h-16 bg-white dark:bg-[#10131d] border-b border-[#E2E7EF] dark:border-slate-800 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20 transition-colors duration-300">
       <div className="flex items-center gap-3">
-        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors">
+        {/* Tombol Hamburger Mobile Drawer */}
+        <button
+          type="button"
+          onClick={onToggleMobileMenu}
+          className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#172033] dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          title="Buka Navigasi"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[#64748B] dark:text-slate-300 border border-[#E2E7EF] dark:border-slate-700 transition-colors hidden sm:inline-block">
           PT. Glace Kreasi Digital
         </span>
 
         {/* Indikator Sisa Waktu Free Trial jika aktif */}
         {isTrial && (
-          <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+          <div className="flex items-center gap-2 pl-2 border-l border-[#E2E7EF] dark:border-slate-800">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-400 text-xs font-semibold animate-pulse">
               <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>{trialText || 'Free Trial: 3 Days Left'}</span>
