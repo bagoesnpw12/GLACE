@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { Search, Plus, Upload, Filter, Calendar, Layers, CheckCircle2, Clock, FileEdit, X } from 'lucide-react';
 import { DrawingItem, DrawingProject } from '../../types/drawing';
 
@@ -88,9 +90,17 @@ export const MyDrawingsView: React.FC<MyDrawingsViewProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-8">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-8"
+    >
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <motion.div
+        variants={staggerItem}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      >
         <div>
           {onBack && (
             <button
@@ -123,10 +133,13 @@ export const MyDrawingsView: React.FC<MyDrawingsViewProps> = ({
             <span>Gambar Baru</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <motion.div
+        variants={staggerItem}
+        className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
+      >
         {/* Search input with rounded outline matching mockup */}
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -169,25 +182,25 @@ export const MyDrawingsView: React.FC<MyDrawingsViewProps> = ({
             </select>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Cards Grid Matching Screenshot */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <motion.div variants={staggerItem} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-44 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 animate-pulse p-5" />
           ))}
-        </div>
+        </motion.div>
       ) : filteredDrawings.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8">
+        <motion.div variants={staggerItem} className="text-center py-16 bg-white dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8">
           <Layers className="w-12 h-12 text-slate-400 mx-auto mb-3 opacity-60" />
           <h3 className="text-base font-medium text-slate-900 dark:text-white">Tidak ada gambar ditemukan</h3>
           <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
             Coba sesuaikan kata kunci pencarian atau buat dokumen gambar baru.
           </p>
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {filteredDrawings.map((drawing) => {
             const dateStr = drawing.created_at
               ? new Date(drawing.created_at).toLocaleDateString('id-ID', {
@@ -198,8 +211,11 @@ export const MyDrawingsView: React.FC<MyDrawingsViewProps> = ({
               : 'Baru saja';
 
             return (
-              <div
+              <motion.div
                 key={drawing.id}
+                variants={staggerItem}
+                whileHover={cardInteractiveHover.whileHover}
+                whileTap={cardInteractiveHover.whileTap}
                 onClick={() => onOpenDrawing(drawing.id)}
                 className="group relative flex flex-col justify-between p-5 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 hover:shadow-lg hover:border-blue-500/40 dark:hover:border-blue-500/40 transition-all duration-200 cursor-pointer min-h-[175px]"
               >
@@ -220,10 +236,10 @@ export const MyDrawingsView: React.FC<MyDrawingsViewProps> = ({
                     Buka Editor →
                   </span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* Create New Drawing Modal */}
@@ -353,7 +369,7 @@ export const MyDrawingsView: React.FC<MyDrawingsViewProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

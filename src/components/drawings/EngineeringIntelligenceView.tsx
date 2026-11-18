@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { ArrowLeft, AlertOctagon, CheckCircle2, ShieldAlert, FileText, Plus, X } from 'lucide-react';
 import { DrawingItem } from '../../types/drawing';
 
@@ -100,9 +102,14 @@ export const EngineeringIntelligenceView: React.FC<EngineeringIntelligenceViewPr
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6"
+    >
       {/* Header */}
-      <div>
+      <motion.div variants={staggerItem}>
         {onBack && (
           <button
             onClick={onBack}
@@ -128,45 +135,68 @@ export const EngineeringIntelligenceView: React.FC<EngineeringIntelligenceViewPr
             <span>+ Tambah Analisis</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Top 4 Metric Cards Matching Screenshot 3 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Material */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs"
+        >
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Material</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             [{materialCount}] temuan material
           </p>
-        </div>
+        </motion.div>
 
         {/* Dimensi */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs"
+        >
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Dimensi</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             [{dimensionCount}] ketidaksesuaian
           </p>
-        </div>
+        </motion.div>
 
         {/* Potensi masalah */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs"
+        >
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Potensi masalah</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             [{problemCount}] risiko terdeteksi
           </p>
-        </div>
+        </motion.div>
 
         {/* Standar */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs"
+        >
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">Standar</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             [{standardCount}] standar acuan
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Temuan Table Matching Screenshot 3 */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs">
+      <motion.div
+        variants={staggerItem}
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs"
+      >
         <div className="p-5 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             Temuan
@@ -216,7 +246,7 @@ export const EngineeringIntelligenceView: React.FC<EngineeringIntelligenceViewPr
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* Add Finding Modal */}
       {showAddModal && (
@@ -312,7 +342,7 @@ export const EngineeringIntelligenceView: React.FC<EngineeringIntelligenceViewPr
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

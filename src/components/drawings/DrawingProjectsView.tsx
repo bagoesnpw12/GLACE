@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { Search, Plus, FolderKanban, Calendar, Users, ArrowLeft, Layers, X, FileText } from 'lucide-react';
 import { DrawingProject, DrawingItem } from '../../types/drawing';
 
@@ -148,9 +150,17 @@ export const DrawingProjectsView: React.FC<DrawingProjectsViewProps> = ({
   }
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-8">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-8"
+    >
       {/* Top Header Matching Screenshot 1 MainContent */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <motion.div
+        variants={staggerItem}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      >
         <div>
           {onBack && (
             <button
@@ -176,10 +186,13 @@ export const DrawingProjectsView: React.FC<DrawingProjectsViewProps> = ({
             <span>+ Proyek Baru</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <motion.div
+        variants={staggerItem}
+        className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
+      >
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -206,23 +219,23 @@ export const DrawingProjectsView: React.FC<DrawingProjectsViewProps> = ({
             </button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Projects Cards Grid Matching Screenshot 1 MainContent */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div variants={staggerItem} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-48 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60 animate-pulse p-6" />
           ))}
-        </div>
+        </motion.div>
       ) : filteredProjects.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8">
+        <motion.div variants={staggerItem} className="text-center py-16 bg-white dark:bg-slate-900/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-8">
           <FolderKanban className="w-12 h-12 text-slate-400 mx-auto mb-3 opacity-60" />
           <h3 className="text-base font-medium text-slate-900 dark:text-white">Tidak ada proyek ditemukan</h3>
           <p className="text-xs text-slate-500 mt-1">Buat proyek baru untuk mengelompokkan dokumen gambar.</p>
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => {
             const projectDrawings = drawings.filter((d) => d.project_id === project.id);
             const count = project.drawing_count !== undefined ? project.drawing_count : projectDrawings.length;
@@ -235,8 +248,11 @@ export const DrawingProjectsView: React.FC<DrawingProjectsViewProps> = ({
               : 'Baru saja';
 
             return (
-              <div
+              <motion.div
                 key={project.id}
+                variants={staggerItem}
+                whileHover={cardInteractiveHover.whileHover}
+                whileTap={cardInteractiveHover.whileTap}
                 onClick={() => setSelectedProject(project)}
                 className="group relative flex flex-col justify-between p-6 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/70 hover:shadow-lg hover:border-blue-500/40 transition-all duration-200 cursor-pointer min-h-[200px]"
               >
@@ -256,10 +272,10 @@ export const DrawingProjectsView: React.FC<DrawingProjectsViewProps> = ({
                     {project.status}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* Create Project Modal */}
@@ -350,7 +366,7 @@ export const DrawingProjectsView: React.FC<DrawingProjectsViewProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

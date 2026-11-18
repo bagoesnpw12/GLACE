@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { 
   Paperclip, 
   Send,
@@ -192,9 +194,14 @@ export const CoEngineerDashboardView: React.FC<CoEngineerDashboardViewProps> = (
   const hasMessages = chatMessages && chatMessages.length > 0;
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 animate-in fade-in duration-150">
-      {/* 1. Header Co Engineer */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <motion.div 
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8"
+    >
+      {/* 1. Header Co Engineer (Judul & Tombol Aksi) */}
+      <motion.div variants={staggerItem} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Co Engineer
@@ -213,10 +220,10 @@ export const CoEngineerDashboardView: React.FC<CoEngineerDashboardViewProps> = (
             <span>Buka Kanvas Engineering</span>
           </button>
         )}
-      </div>
+      </motion.div>
 
       {/* 2. AI Engineering Workspace Card (How can I help you today?) */}
-      <div className="w-full bg-slate-50/70 dark:bg-slate-900/60 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative shadow-xs transition-all">
+      <motion.div variants={staggerItem} className="w-full bg-slate-50/70 dark:bg-slate-900/60 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-6 md:p-8 flex flex-col justify-between relative shadow-xs transition-all">
         {!hasMessages ? (
           /* Tampilan Awal: Clean Hero "How can I help you today?" */
           <div className="flex-1 flex flex-col items-center justify-center text-center py-8 sm:py-12 md:py-16">
@@ -337,18 +344,21 @@ export const CoEngineerDashboardView: React.FC<CoEngineerDashboardViewProps> = (
             <Send className="w-4 h-4 -rotate-45" />
           </button>
         </form>
-      </div>
+      </motion.div>
 
-      {/* 3. Engineering Disciplines (9 Cards Grid) */}
-      <div className="space-y-4">
+      {/* 3. Engineering Disciplines (9 Cards Grid with Stagger) */}
+      <motion.div variants={staggerItem} className="space-y-4">
         <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
           Engineering Disciplines
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {cards.map((card) => (
-            <div
+            <motion.div
               key={card.num}
+              variants={staggerItem}
+              whileHover={cardInteractiveHover.whileHover}
+              whileTap={cardInteractiveHover.whileTap}
               onClick={() => onNavigateSubItem(card.title)}
               className="glace-floating-card bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 cursor-pointer group flex flex-col justify-between min-h-[140px] shadow-xs"
             >
@@ -363,13 +373,13 @@ export const CoEngineerDashboardView: React.FC<CoEngineerDashboardViewProps> = (
                   {card.desc}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* 4. Recent Conversations */}
-      <div className="space-y-4 pt-2">
+      <motion.div variants={staggerItem} className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
             Recent Conversations
@@ -422,7 +432,7 @@ export const CoEngineerDashboardView: React.FC<CoEngineerDashboardViewProps> = (
             </table>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

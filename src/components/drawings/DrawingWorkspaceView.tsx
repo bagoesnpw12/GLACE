@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem } from '../../utils/motionVariants';
 import { 
   ArrowLeft, 
   MousePointer, 
@@ -42,10 +44,10 @@ export const DrawingWorkspaceView: React.FC<DrawingWorkspaceViewProps> = ({
       console.error(e);
     }
     return [
-      { id: 'el-1', type: 'line', x: 80, y: 80, x2: 320, y2: 80, stroke: '#2563eb', strokeWidth: 2, layerId: 'layer-1' },
+      { id: 'el-4', type: 'text', x: 80, y: 70, text: 'Glace Engineering Unit A', stroke: '#94a3b8', strokeWidth: 1, layerId: 'layer-3' },
+      { id: 'el-1', type: 'line', x: 80, y: 95, x2: 320, y2: 95, stroke: '#2563eb', strokeWidth: 2, layerId: 'layer-1' },
       { id: 'el-2', type: 'rect', x: 80, y: 120, width: 240, height: 160, stroke: '#2563eb', strokeWidth: 2, layerId: 'layer-1' },
-      { id: 'el-3', type: 'circle', x: 200, y: 350, radius: 50, stroke: '#2563eb', strokeWidth: 2, layerId: 'layer-1' },
-      { id: 'el-4', type: 'text', x: 80, y: 440, text: 'Glace Engineering Unit A', stroke: '#1e293b', strokeWidth: 1, layerId: 'layer-3' }
+      { id: 'el-3', type: 'circle', x: 200, y: 350, radius: 50, stroke: '#2563eb', strokeWidth: 2, layerId: 'layer-1' }
     ];
   });
 
@@ -282,9 +284,17 @@ export const DrawingWorkspaceView: React.FC<DrawingWorkspaceViewProps> = ({
   const visibleLayerIds = new Set(layers.filter(l => l.visible).map(l => l.id));
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] w-full bg-[#f8fafc] dark:bg-[#0b0f17] select-none">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="flex flex-col h-[calc(100vh-80px)] w-full bg-[#f8fafc] dark:bg-[#0b0f17] select-none"
+    >
       {/* Top Bar Matching Screenshot 2 Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs z-20">
+      <motion.div
+        variants={staggerItem}
+        className="flex items-center justify-between px-6 py-3.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs relative z-10"
+      >
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
@@ -296,7 +306,7 @@ export const DrawingWorkspaceView: React.FC<DrawingWorkspaceViewProps> = ({
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
           <div>
             <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Drawing Workspace
+              Ruang Kerja Menggambar
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {drawing.title} • {drawing.discipline} ({drawing.revision})
@@ -384,10 +394,10 @@ export const DrawingWorkspaceView: React.FC<DrawingWorkspaceViewProps> = ({
             )}
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Workspace Body */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <motion.div variants={staggerItem} className="flex-1 flex overflow-hidden relative">
         {/* Left Vertical Toolbar Matching Screenshot 2 */}
         <div className="w-16 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col items-center py-4 gap-3 z-10 shadow-xs">
           <button
@@ -716,7 +726,7 @@ export const DrawingWorkspaceView: React.FC<DrawingWorkspaceViewProps> = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

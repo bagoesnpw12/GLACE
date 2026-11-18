@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { ArrowLeft, Plus, CheckCircle, Clock, Send, X, FileCheck } from 'lucide-react';
 import { DrawingItem } from '../../types/drawing';
 
@@ -101,9 +103,14 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6"
+    >
       {/* Header */}
-      <div>
+      <motion.div variants={staggerItem}>
         {onBack && (
           <button
             onClick={onBack}
@@ -124,12 +131,15 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
             <span>+ Ajukan Revisi</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* 4 Workflow Status Stages Matching Screenshot 6 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div variants={staggerContainer} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Stage 1: Draf */}
-        <div
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
           onClick={() => setActiveStage('Draf')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeStage === 'Draf'
@@ -139,10 +149,13 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
         >
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">1 - Draf</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Gambar sedang disusun</p>
-        </div>
+        </motion.div>
 
         {/* Stage 2: Review */}
-        <div
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
           onClick={() => setActiveStage('Review')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeStage === 'Review'
@@ -152,10 +165,13 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
         >
           <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400">2 - Review</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Menunggu pemeriksaan</p>
-        </div>
+        </motion.div>
 
         {/* Stage 3: Disetujui */}
-        <div
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
           onClick={() => setActiveStage('Disetujui')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeStage === 'Disetujui'
@@ -165,10 +181,13 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
         >
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">3 - Disetujui</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Siap untuk pelepasan</p>
-        </div>
+        </motion.div>
 
         {/* Stage 4: Terbit */}
-        <div
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
           onClick={() => setActiveStage('Terbit')}
           className={`p-5 rounded-2xl border transition-all cursor-pointer ${
             activeStage === 'Terbit'
@@ -178,11 +197,14 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
         >
           <h3 className="text-sm font-bold text-slate-900 dark:text-white">4 - Terbit</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Rilis resmi ke lapangan</p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Riwayat Revisi Table Matching Screenshot 6 */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs">
+      <motion.div
+        variants={staggerItem}
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs"
+      >
         <div className="p-5 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
             RIWAYAT REVISI
@@ -239,115 +261,131 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Ajukan Revisi Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ajukan Revisi Gambar</h3>
-              <button onClick={() => setShowModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleCreateRevision} className="mt-4 space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pilih Dokumen Gambar</label>
-                <select
-                  value={selectedDrawingId}
-                  onChange={(e) => setSelectedDrawingId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                >
-                  {drawings.map(d => (
-                    <option key={d.id} value={d.id}>{d.title} ({d.discipline})</option>
-                  ))}
-                </select>
+      {/* Ajukan Revisi Modal dengan Motion Smooth Transition */}
+      <AnimatePresence>
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => setShowModal(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="relative z-10 bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800"
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ajukan Revisi Gambar</h3>
+                <button onClick={() => setShowModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <form onSubmit={handleCreateRevision} className="mt-4 space-y-4 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor Dokumen</label>
-                  <input
-                    type="text"
-                    required
-                    value={drawingNumber}
-                    onChange={(e) => setDrawingNumber(e.target.value)}
-                    placeholder="DWG-CIP-001"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Revisi</label>
-                  <input
-                    type="text"
-                    required
-                    value={revision}
-                    onChange={(e) => setRevision(e.target.value)}
-                    placeholder="Rev B"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pemeriksa (Reviewer)</label>
-                  <input
-                    type="text"
-                    required
-                    value={reviewer}
-                    onChange={(e) => setReviewer(e.target.value)}
-                    placeholder="Ir. Hendra (Lead Engineer)"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Status Alur</label>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pilih Dokumen Gambar</label>
                   <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as any)}
+                    value={selectedDrawingId}
+                    onChange={(e) => setSelectedDrawingId(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   >
-                    <option value="Draf">Draf</option>
-                    <option value="Review">Review</option>
-                    <option value="Disetujui">Disetujui</option>
-                    <option value="Terbit">Terbit</option>
+                    {drawings.map(d => (
+                      <option key={d.id} value={d.id}>{d.title} ({d.discipline})</option>
+                    ))}
                   </select>
                 </div>
-              </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Catatan Perubahan</label>
-                <textarea
-                  rows={2}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Catatan perubahan revisi teknis..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                />
-              </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nomor Dokumen</label>
+                    <input
+                      type="text"
+                      required
+                      value={drawingNumber}
+                      onChange={(e) => setDrawingNumber(e.target.value)}
+                      placeholder="DWG-CIP-001"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Target Revisi</label>
+                    <input
+                      type="text"
+                      required
+                      value={revision}
+                      onChange={(e) => setRevision(e.target.value)}
+                      placeholder="Rev B"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-                >
-                  Simpan Revisi
-                </button>
-              </div>
-            </form>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Pemeriksa (Reviewer)</label>
+                    <input
+                      type="text"
+                      required
+                      value={reviewer}
+                      onChange={(e) => setReviewer(e.target.value)}
+                      placeholder="Ir. Hendra (Lead Engineer)"
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Status Alur</label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as any)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    >
+                      <option value="Draf">Draf</option>
+                      <option value="Review">Review</option>
+                      <option value="Disetujui">Disetujui</option>
+                      <option value="Terbit">Terbit</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Catatan Perubahan</label>
+                  <textarea
+                    rows={2}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Catatan perubahan revisi teknis..."
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer"
+                  >
+                    Simpan Revisi
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

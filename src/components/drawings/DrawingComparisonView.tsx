@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { ArrowLeft, CheckCircle2, AlertTriangle, GitCompare, Eye } from 'lucide-react';
 import { DrawingItem } from '../../types/drawing';
 
@@ -27,9 +29,14 @@ export const DrawingComparisonView: React.FC<DrawingComparisonViewProps> = ({
   ];
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6"
+    >
       {/* Header */}
-      <div>
+      <motion.div variants={staggerItem}>
         {onBack && (
           <button
             onClick={onBack}
@@ -67,12 +74,17 @@ export const DrawingComparisonView: React.FC<DrawingComparisonViewProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Comparison Canvas & Changes List Matching Screenshot 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <motion.div variants={staggerContainer} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Rev A Canvas */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between min-h-[460px]">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
+          className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between min-h-[460px]"
+        >
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <span className="text-xs font-bold text-slate-800 dark:text-white">
@@ -88,10 +100,15 @@ export const DrawingComparisonView: React.FC<DrawingComparisonViewProps> = ({
             </div>
           </div>
           <p className="text-[11px] text-slate-400 text-center mt-4">Versi Baseline</p>
-        </div>
+        </motion.div>
 
         {/* Rev B Canvas (With Orange Diff Highlight Box) */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between min-h-[460px]">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          whileTap={cardInteractiveHover.whileTap}
+          className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between min-h-[460px]"
+        >
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <span className="text-xs font-bold text-slate-800 dark:text-white">
@@ -112,10 +129,14 @@ export const DrawingComparisonView: React.FC<DrawingComparisonViewProps> = ({
           <p className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold text-center mt-4">
             ● 1 elemen tambahan terdeteksi
           </p>
-        </div>
+        </motion.div>
 
         {/* Right Side: Daftar Perubahan Matching Screenshot 2 */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs min-h-[460px] flex flex-col">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs min-h-[460px] flex flex-col"
+        >
           <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
             Daftar perubahan
           </h2>
@@ -145,9 +166,9 @@ export const DrawingComparisonView: React.FC<DrawingComparisonViewProps> = ({
               Buka di Workspace →
             </button>
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 

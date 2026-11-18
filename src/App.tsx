@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { DashboardView } from './components/DashboardView';
@@ -15,6 +16,7 @@ import { LandingPage } from './components/LandingPage';
 import { LoginPage } from './components/LoginPage';
 import { SignUpPage } from './components/SignUpPage';
 import { ThemeProvider } from './context/ThemeContext';
+import { SidebarProvider } from './components/ui/sidebar';
 import { ActivityItem } from './types';
 
 function AppContent() {
@@ -295,7 +297,14 @@ function AppContent() {
 
   // Render Dashboard
   return (
-    <div className="flex min-h-screen bg-[#F5F7FA] dark:bg-[#0b0d13] text-[#172033] dark:text-slate-100 transition-colors duration-300">
+    <SidebarProvider
+      open={!isSidebarCollapsed}
+      onOpenChange={(open) => {
+        setIsSidebarCollapsed(!open);
+        localStorage.setItem('glace_sidebar_collapsed', String(!open));
+      }}
+      className="flex min-h-screen bg-slate-50 dark:bg-[#090B10] text-slate-900 dark:text-slate-100 transition-colors duration-300"
+    >
       {/* Sidebar Navigation */}
       <Sidebar
         currentTab={currentTab}
@@ -313,7 +322,7 @@ function AppContent() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
         <Header
           userEmail={userEmail}
           userName={userName}
@@ -324,104 +333,114 @@ function AppContent() {
           onToggleMobileMenu={() => setIsMobileDrawerOpen(prev => !prev)}
         />
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-x-hidden">
-          <div key={`${currentTab}-${selectedSubItem}`} className="animate-glace-page">
-            {currentTab === 'dashboard' && (
-              <DashboardView
-                userName={userName}
-                onNavigateModule={(modId) => setCurrentTab(modId)}
-                activities={activities}
-              />
-            )}
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl w-full mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTab === 'co-engineer' ? 'co-engineer-root' : `${currentTab}-${selectedSubItem}`}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {currentTab === 'dashboard' && (
+                  <DashboardView
+                    userName={userName}
+                    onNavigateModule={(modId) => setCurrentTab(modId)}
+                    activities={activities}
+                  />
+                )}
 
-            {currentTab === 'co-engineer' && (
-              <CoEngineerModule 
-                onAddActivity={addActivity}
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-                activities={activities}
-              />
-            )}
+                {currentTab === 'co-engineer' && (
+                  <CoEngineerModule 
+                    onAddActivity={addActivity}
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                    activities={activities}
+                  />
+                )}
 
-            {currentTab === 'project-intelligence' && (
-              <ProjectIntelligenceModule 
-                onAddActivity={addActivity} 
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-              />
-            )}
+                {currentTab === 'project-intelligence' && (
+                  <ProjectIntelligenceModule 
+                    onAddActivity={addActivity} 
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                  />
+                )}
 
-            {currentTab === 'asset-intelligence' && (
-              <AssetIntelligenceModule 
-                onAddActivity={addActivity}
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-              />
-            )}
+                {currentTab === 'asset-intelligence' && (
+                  <AssetIntelligenceModule 
+                    onAddActivity={addActivity}
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                  />
+                )}
 
-            {currentTab === 'document-intelligence' && (
-              <DocumentIntelligenceModule 
-                onAddActivity={addActivity}
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-              />
-            )}
+                {currentTab === 'document-intelligence' && (
+                  <DocumentIntelligenceModule 
+                    onAddActivity={addActivity}
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                  />
+                )}
 
-            {currentTab === 'glace-commerce' && (
-              <GlaceCommerceModule 
-                onAddActivity={addActivity} 
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-              />
-            )}
+                {currentTab === 'glace-commerce' && (
+                  <GlaceCommerceModule 
+                    onAddActivity={addActivity} 
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                  />
+                )}
 
-            {currentTab === 'glace-academy' && (
-              <GlaceAcademyModule 
-                onAddActivity={addActivity}
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-              />
-            )}
+                {currentTab === 'glace-academy' && (
+                  <GlaceAcademyModule 
+                    onAddActivity={addActivity}
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                  />
+                )}
 
-            {currentTab === 'enterprise-solutions' && (
-              <EnterpriseSolutionsView 
-                onAddActivity={addActivity} 
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-              />
-            )}
+                {currentTab === 'enterprise-solutions' && (
+                  <EnterpriseSolutionsView 
+                    onAddActivity={addActivity} 
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                  />
+                )}
 
-            {currentTab === 'settings' && (
-              <SettingsView
-                userName={userName}
-                userEmail={userEmail}
-                onUpdateUser={handleUpdateUser}
-                onAddActivity={addActivity}
-                selectedSubItem={selectedSubItem}
-                onSelectSubItem={(sub) => setSelectedSubItem(sub)}
-              />
-            )}
+                {currentTab === 'settings' && (
+                  <SettingsView
+                    userName={userName}
+                    userEmail={userEmail}
+                    onUpdateUser={handleUpdateUser}
+                    onAddActivity={addActivity}
+                    selectedSubItem={selectedSubItem}
+                    onSelectSubItem={(sub) => setSelectedSubItem(sub)}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="border-t border-slate-200/80 dark:border-slate-800 py-4 px-8 text-xs text-slate-400 dark:text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-[#10131d] transition-colors">
-          <div>© 2026 PT. Glace Kreasi Digital. All rights reserved.</div>
-          <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Privacy</a>
-            <a href="#" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Terms</a>
-            <a href="#" className="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">Contact</a>
-            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
-              <span className="hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer">LinkedIn</span>
+        {/* Footer Tetap Diam di Bawah Viewport (Sticky/Fixed di Dasar Konten Utama) */}
+        <footer className="shrink-0 border-t border-slate-200 dark:border-[#1a1f2c] py-3 sm:py-3.5 px-4 sm:px-8 text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 bg-white dark:bg-[#090B10] z-30 transition-colors">
+          <div>© 2026 PT. Glace Kreasi Digital, Semua hak dilindungi undang-undang.</div>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <a href="#" className="hover:text-slate-800 dark:hover:text-slate-300 transition-colors">Privasi</a>
+            <a href="#" className="hover:text-slate-800 dark:hover:text-slate-300 transition-colors">Ketentuan</a>
+            <a href="#" className="hover:text-slate-800 dark:hover:text-slate-300 transition-colors">Kontak</a>
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <span className="hover:text-slate-800 dark:hover:text-slate-300 cursor-pointer">LinkedIn</span>
               <span>•</span>
-              <span className="hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer">YouTube</span>
+              <span className="hover:text-slate-800 dark:hover:text-slate-300 cursor-pointer">YouTube</span>
               <span>•</span>
-              <span className="hover:text-slate-700 dark:hover:text-slate-300 cursor-pointer">GitHub</span>
+              <span className="hover:text-slate-800 dark:hover:text-slate-300 cursor-pointer">GitHub</span>
             </div>
           </div>
         </footer>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   LayoutDashboard, 
   Bot, 
@@ -12,11 +13,20 @@ import {
   ChevronRight, 
   ChevronDown,
   ChevronLeft,
-  Globe,
   ExternalLink,
+  PanelLeft,
   X,
-  ArrowLeft
 } from 'lucide-react';
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+} from '@/components/ui/sidebar';
 
 interface SidebarProps {
   currentTab: string;
@@ -69,54 +79,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
       'Reports',
     ],
     'asset-intelligence': [
-      'Asset Register',
-      'Asset Health',
-      'Inspection',
-      'Maintenance',
-      'Digital Twin',
-      'Field Operations',
+      'Asset Registry',
+      'Condition Monitoring',
+      'Predictive Maintenance',
+      'Work Orders',
+      'Failure Analysis',
+      'Asset Lifecycle',
     ],
     'document-intelligence': [
-      'Documents',
-      'Drawings',
-      'Document Control',
-      'AI Search',
-      'AI Comparison',
-      'Knowledge Base',
+      'Document Hub',
+      'Smart Extraction',
+      'Semantic Search',
+      'Document Comparison',
+      'Compliance Check',
+      'Audit Trail',
     ],
     'glace-commerce': [
       'Marketplace',
-      'AI Procurement',
-      'Search by Image',
-      'RFQ',
+      'Vendor Directory',
+      'Material Catalog',
+      'RFQ & Bidding',
       'Purchase Orders',
-      'Orders',
+      'Contract Management',
     ],
     'glace-academy': [
-      'Courses',
-      'Learning Paths',
+      'Course Catalog',
+      'My Learning',
       'Certifications',
-      'Engineering Library',
+      'Knowledge Base',
+      'Community Forum',
+      'Webinars',
     ],
     'enterprise-solutions': [
-      'Organization',
-      'Enterprise AI',
-      'Integrations',
-      'Data',
-      'Governance',
+      'Organization Overview',
+      'Multi-Project Dashboard',
+      'Enterprise Analytics',
+      'Security & Governance',
+      'Custom Integrations',
+      'SLA & Support',
     ],
     'settings': [
-      'Account',
-      'Organization',
-      'Security',
-      'Integrations',
-      'Billing',
+      'Account Profile',
+      'Workspace Settings',
+      'Team & Roles',
+      'Integrations & API',
+      'Billing & Plans',
+      'Audit Logs',
     ],
   };
 
-  // Submenu state untuk mode EXPAND
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
-    'co-engineer': false,
+    'co-engineer': true,
     'project-intelligence': false,
     'asset-intelligence': false,
     'document-intelligence': false,
@@ -126,55 +139,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'settings': false,
   });
 
-  // State Popout Submenu saat kondisi COLLAPSE di Desktop (Hover)
   const [popoutTabId, setPopoutTabId] = useState<string | null>(null);
   const [popoutPos, setPopoutPos] = useState<{ top: number }>({ top: 0 });
-  const hoverTimerRef = useRef<any>(null);
-  const popoutRef = useRef<HTMLDivElement>(null);
-  const sidebarRef = useRef<HTMLElement>(null);
-
-  // State Mobile Bottom Sheet Submenu (Touchscreen / Layar < 1024px)
   const [mobileSubmenuTabId, setMobileSubmenuTabId] = useState<string | null>(null);
 
-  // Nav items item elements refs map for precise animated indicator placement
-  const navRef = useRef<HTMLElement>(null);
-  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number; ready: boolean }>({
-    top: 0,
-    height: 48,
-    ready: false,
-  });
-
-  // Update animated active indicator geometry based on the active DOM element
-  useEffect(() => {
-    const updateIndicator = () => {
-      const activeEl = itemRefs.current[currentTab];
-      const navEl = navRef.current;
-      if (activeEl && navEl) {
-        const navRect = navEl.getBoundingClientRect();
-        const itemRect = activeEl.getBoundingClientRect();
-        setIndicatorStyle({
-          top: itemRect.top - navRect.top,
-          height: itemRect.height || 48,
-          ready: true,
-        });
-      }
-    };
-
-    // Panggil langsung
-    updateIndicator();
-
-    // Panggil juga pada requestAnimationFrame berikutnya dan timer kecil untuk sinkron dengan transisi DOM/submenu
-    const rafId = requestAnimationFrame(updateIndicator);
-    const timer = setTimeout(updateIndicator, 50);
-
-    window.addEventListener('resize', updateIndicator);
-    return () => {
-      cancelAnimationFrame(rafId);
-      clearTimeout(timer);
-      window.removeEventListener('resize', updateIndicator);
-    };
-  }, [currentTab, isCollapsed, openSubmenus]);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const popoutRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
 
   // Pertahankan submenu tetap terbuka selama pengguna berada di halaman turunannya (mode Expand)
   useEffect(() => {
@@ -224,12 +195,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }));
   };
 
-  // Klik Menu Utama (Mode Expand):
-  // - Klik pertama: Navigasi ke Dashboard Utama modul tersebut & buka submenu
-  // - Klik kedua pada menu yang sama: Toggle buka/tutup submenu
+  // Klik Menu Utama (Mode Expand)
   const handleMenuClick = (itemId: string, hasSub: boolean) => {
     if (currentTab === itemId && hasSub) {
-      // Klik kedua pada menu aktif yang sama -> toggle buka/tutup submenu
       setOpenSubmenus((prev) => ({
         ...prev,
         [itemId]: !prev[itemId],
@@ -237,16 +205,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return;
     }
 
-    // Klik pertama (atau klik dari tab lain) -> buka dashboard utama modul
     onSelectTab(itemId);
     if (onSelectSubItem) {
-      onSelectSubItem(''); // Reset submenu agar merender Overview / Dashboard Utama modul tersebut
+      onSelectSubItem(''); // Reset submenu agar merender Overview / Dashboard Utama modul
     }
 
     if (hasSub) {
       setOpenSubmenus((prev) => ({
         ...prev,
-        [itemId]: true, // Buka submenu modul tersebut
+        [itemId]: true,
       }));
     }
 
@@ -255,7 +222,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  // Klik Submenu (Baik dari menu biasa, popout desktop, maupun bottom sheet mobile)
+  // Klik Submenu
   const handleSubItemClick = (parentTabId: string, subName: string) => {
     onSelectTab(parentTabId);
     if (onSelectSubItem) {
@@ -265,7 +232,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ...prev,
       [parentTabId]: true,
     }));
-    // Tutup popout dan mobile bottom sheet setelah navigasi
     setPopoutTabId(null);
     setMobileSubmenuTabId(null);
 
@@ -276,7 +242,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // DESKTOP: Handle Interaksi Hover Popout pada kondisi COLLAPSE
   const handleMouseEnterItem = (itemId: string, e: React.MouseEvent<HTMLDivElement>) => {
-    // Hanya aktif pada desktop yang mendukung hover
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
       if (!isCollapsed) return;
       if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
@@ -292,7 +257,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       if (!isCollapsed) return;
       hoverTimerRef.current = setTimeout(() => {
         setPopoutTabId(null);
-      }, 200); // Debounce jeda perpindahan kursor
+      }, 200);
     }
   };
 
@@ -306,14 +271,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }, 200);
   };
 
-  // Klik ikon menu saat COLLAPSE atau MOBILE:
-  // - Mode COLLAPSED (Desktop & Mobile):
-  //   1. Klik ikon menu langsung membuka Dashboard utama modul tersebut (memindahkan active state & indikator)
-  //   2. Menampilkan popout/bottom sheet submenu modul tersebut agar user bisa melihat / memilih submenu
+  // Klik ikon menu saat COLLAPSE
   const handleIconClick = (itemId: string, e: React.MouseEvent, hasSub: boolean) => {
     e.stopPropagation();
-
-    // Selalu pindahkan active tab ke item yang diklik & reset selectedSubItem ke overview
     onSelectTab(itemId);
     if (onSelectSubItem) {
       onSelectSubItem('');
@@ -323,10 +283,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     if (hasSub) {
       if (isTouchDevice) {
-        // Buka panel submenu mobile bottom sheet
         setMobileSubmenuTabId(itemId);
       } else {
-        // Pada Desktop Collapsed: Posisikan dan tampilkan popout submenu
         const rect = e.currentTarget.getBoundingClientRect();
         setPopoutPos({ top: rect.top });
         setPopoutTabId(itemId);
@@ -334,7 +292,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       return;
     }
 
-    // Jika menu tidak memiliki submenu (seperti Dashboard):
     setPopoutTabId(null);
     setMobileSubmenuTabId(null);
     if (onCloseMobileDrawer) {
@@ -353,21 +310,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     { 
       id: 'project-intelligence', 
-      label: 'Project Intelligence', 
+      label: 'Kecerdasan Proyek', 
       icon: BarChart3, 
       hasSub: true,
       subItems: subItemsMap['project-intelligence'],
     },
     { 
       id: 'asset-intelligence', 
-      label: 'Asset Intelligence', 
+      label: 'Intelijen Aset', 
       icon: Activity, 
       hasSub: true,
       subItems: subItemsMap['asset-intelligence'],
     },
     { 
       id: 'document-intelligence', 
-      label: 'Document Intelligence', 
+      label: 'Kecerdasan Dokumen', 
       icon: FileText, 
       hasSub: true,
       subItems: subItemsMap['document-intelligence'],
@@ -381,21 +338,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     { 
       id: 'glace-academy', 
-      label: 'Glace Academy', 
+      label: 'Akademi Glace', 
       icon: GraduationCap, 
       hasSub: true,
       subItems: subItemsMap['glace-academy'],
     },
     { 
       id: 'enterprise-solutions', 
-      label: 'Enterprise Solutions', 
+      label: 'Solusi Perusahaan', 
       icon: Building2, 
       hasSub: true,
       subItems: subItemsMap['enterprise-solutions'],
     },
     { 
       id: 'settings', 
-      label: 'Settings', 
+      label: 'Pengaturan', 
       icon: Settings, 
       hasSub: true,
       subItems: subItemsMap['settings'],
@@ -405,40 +362,87 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const activePopoutItem = navItems.find(item => item.id === popoutTabId);
   const activeMobileSubmenuItem = navItems.find(item => item.id === mobileSubmenuTabId);
 
+  // Label Menu Aktif untuk Breadcrumb
+  const currentNavItem = navItems.find(item => item.id === currentTab);
+  const currentMenuLabel = currentNavItem ? currentNavItem.label : '';
+  // Tampilkan breadcrumb di semua halaman selain Dasbor
+  const showBreadcrumb = currentTab !== 'dashboard' && !!currentMenuLabel;
+
   return (
     <>
       {/* Mobile Backdrop Overlay untuk Drawer Utama */}
       {isMobileDrawerOpen && (
         <div 
           onClick={onCloseMobileDrawer}
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-200"
         />
       )}
 
       {/* =========================================================================
-          SIDEBAR UTAMA (COLLAPSE / EXPAND / MOBILE DRAWER)
-          - Light Mode: Putih / Abu sangat muda (#FFFFFF / #F8FAFC) + Border #E2E7EF + Teks #172033
-          - Dark Mode: Navy Gelap (#050E1D) + Border #152338 + Teks Putih
-          - Bentuk Active Menu: Ujung kiri bulat penuh, sisi kanan concave cutout (#0066FF)
+          SIDEBAR UTAMA SHADCN (sidebar-07 Architecture)
           ========================================================================= */}
       <aside 
         ref={sidebarRef}
+        data-slot="sidebar"
+        data-sidebar="sidebar"
         className={`${
           isCollapsed ? 'w-[76px]' : 'w-64'
-        } bg-white dark:bg-[#050E1D] border-r border-[#E2E7EF] dark:border-[#152338] text-[#172033] dark:text-white flex flex-col justify-between h-screen fixed lg:sticky top-0 z-50 lg:z-30 select-none transition-all duration-300 ease-in-out ${
+        } bg-white dark:bg-[#090B10] border-r border-slate-200 dark:border-[#1a1f2c] text-slate-700 dark:text-slate-200 flex flex-col justify-between h-screen fixed lg:sticky top-0 z-50 lg:z-40 select-none transition-all duration-300 ease-in-out box-border relative ${
           isMobileDrawerOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        {/* Scrollable Nav Area (Menu List) */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
-          {/* Brand Header */}
-          <div className={`h-16 ${isCollapsed ? 'px-3 justify-center' : 'px-5 justify-between'} flex items-center border-b border-[#E2E7EF] dark:border-[#152338]/80 sticky top-0 bg-white dark:bg-[#050E1D] z-20 transition-all`}>
+        {/* Tombol Split Sidebar dan Breadcrumb Dinamis (Sejajar dengan Menu Dasbor) */}
+        <div className="hidden lg:flex absolute left-[calc(100%+12px)] top-[76px] z-20 items-center gap-3 h-7 pointer-events-auto">
+          {/* Tombol Split Sidebar */}
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="size-7 flex items-center justify-center rounded-md bg-white dark:bg-[#13161f] hover:bg-slate-100 dark:hover:bg-[#1d222e] border border-slate-200 dark:border-[#1e2330] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white shadow-md transition-all cursor-pointer hover:scale-105 shrink-0"
+            title={isCollapsed ? "Perbesar Sidebar" : "Perkecil Sidebar"}
+          >
+            <PanelLeft className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Breadcrumb Dinamis: Tampil pada Overview Modul dan Submenu */}
+          {showBreadcrumb && (
+            <div className="flex items-center gap-2.5 text-xs whitespace-nowrap pl-1 animate-in fade-in duration-200">
+              <span className="w-px h-3.5 bg-slate-300 dark:bg-[#1e2330]" />
+              {selectedSubItem ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onSelectSubItem) onSelectSubItem('');
+                    }}
+                    className="text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    title={`Kembali ke ${currentMenuLabel}`}
+                  >
+                    {currentMenuLabel}
+                  </button>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+                  <span className="text-slate-900 dark:text-slate-100 font-medium">
+                    {selectedSubItem}
+                  </span>
+                </>
+              ) : (
+                <span className="text-slate-900 dark:text-slate-100 font-medium">
+                  {currentMenuLabel}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Scrollable Nav Area dengan primitive shadcn SidebarContent */}
+        <SidebarContent className="flex-1 overflow-y-auto overflow-x-hidden p-0 bg-white dark:bg-[#090B10]">
+          {/* Brand Header: h-16 box-border border-b border-slate-200 dark:border-[#1a1f2c] sejajar presisi dengan Header Konten Utama */}
+          <div className={`h-16 shrink-0 box-border border-b border-slate-200 dark:border-[#1a1f2c] ${isCollapsed ? 'px-3 justify-center' : 'px-4 justify-between'} flex items-center sticky top-0 bg-white dark:bg-[#090B10] z-20 transition-all`}>
             <div className="flex items-center gap-2.5">
-              <span className="text-blue-600 dark:text-blue-500 font-extrabold text-xl tracking-tight select-none italic">
+              <span className="text-slate-900 dark:text-white font-extrabold text-xl tracking-tight select-none italic">
                 //
               </span>
               {!isCollapsed && (
-                <span className="font-extrabold text-lg tracking-wider text-[#172033] dark:text-white uppercase select-none">
+                <span className="font-extrabold text-base tracking-wider text-slate-900 dark:text-white uppercase select-none">
                   GLACE
                 </span>
               )}
@@ -448,225 +452,184 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               onClick={onCloseMobileDrawer}
-              className="lg:hidden text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="lg:hidden text-slate-400 hover:text-slate-700 dark:hover:text-white p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-slate-100 dark:hover:bg-[#1f222b]"
               title="Tutup Menu"
             >
               <X className="w-5 h-5" />
             </button>
-
-            {/* Toggle Collapse Button (Hanya Desktop) */}
-            <button 
-              type="button"
-              onClick={onToggleCollapse}
-              className={`hidden lg:block text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white p-1.5 rounded-lg transition-colors cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 ${
-                isCollapsed ? 'hidden' : 'block'
-              }`}
-              title="Ciutkan Sidebar"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
           </div>
 
-          {/* Navigation Links Area */}
-          <nav ref={navRef} className="relative py-3">
-            {/* =========================================================================
-                ANIMATED SLIDING ACTIVE INDICATOR
-                - Kiri: Bulat penuh (A 24 24 0 0 1)
-                - Kanan: Concave hourglass cutout (C 244 0 236 12 236 24 C 236 36 244 48 252 48)
-                - Area biru memanjang menyatu ke batas kanan sidebar
-                - Animasi transisi halus 380ms cubic-bezier
-                ========================================================================= */}
-            {indicatorStyle.ready && (
-              <div
-                className={`absolute ${isCollapsed ? 'left-2.5' : 'left-3'} right-0 pointer-events-none transition-all duration-380 ease-[cubic-bezier(0.2,0.9,0.3,1)] z-10`}
-                style={{
-                  top: `${indicatorStyle.top}px`,
-                  height: `${indicatorStyle.height}px`,
-                }}
-              >
-                {!isCollapsed ? (
-                  /* Expanded Menu Indicator SVG (Width: 244px, Height: 48px) */
-                  <svg
-                    width="100%"
-                    height="100%"
-                    viewBox="0 0 244 48"
-                    preserveAspectRatio="none"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-full h-full drop-shadow-[0_2px_12px_rgba(0,102,255,0.35)]"
-                  >
-                    <path
-                      d="M 24 0 H 244 C 232 0 226 12 226 24 C 226 36 232 48 244 48 H 24 A 24 24 0 0 1 24 0 Z"
-                      fill="#0066FF"
-                    />
-                  </svg>
-                ) : (
-                  /* Collapsed Menu Indicator SVG (Width: 66px, Height: 48px) */
-                  <svg
-                    width="100%"
-                    height="100%"
-                    viewBox="0 0 66 48"
-                    preserveAspectRatio="none"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-full h-full drop-shadow-[0_2px_10px_rgba(0,102,255,0.35)]"
-                  >
-                    <path
-                      d="M 24 0 H 66 C 54 0 48 12 48 24 C 48 36 54 48 66 48 H 24 A 24 24 0 0 1 24 0 Z"
-                      fill="#0066FF"
-                    />
-                  </svg>
-                )}
-              </div>
-            )}
+          {/* Navigation Links Area dengan primitive shadcn SidebarMenu */}
+          <nav className="p-2 space-y-1">
+            <SidebarMenu>
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentTab === item.id;
+                const isSubmenuOpen = !!openSubmenus[item.id];
+                const isPopoutActive = popoutTabId === item.id || mobileSubmenuTabId === item.id;
 
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentTab === item.id;
-              const isSubmenuOpen = !!openSubmenus[item.id];
-              const isPopoutActive = popoutTabId === item.id || mobileSubmenuTabId === item.id;
-
-              // ---------------------------------------------------------------
-              // 1. TAMPILAN COLLAPSED (Hanya Ikon Menu)
-              // ---------------------------------------------------------------
-              if (isCollapsed) {
-                return (
-                  <div 
-                    key={item.id}
-                    ref={(el) => { itemRefs.current[item.id] = el; }}
-                    onMouseEnter={(e) => handleMouseEnterItem(item.id, e)}
-                    onMouseLeave={handleMouseLeaveItem}
-                    className="relative flex justify-center group h-12 my-1"
-                  >
-                    <button
-                      type="button"
-                      onClick={(e) => handleIconClick(item.id, e, !!item.hasSub)}
-                      className={`w-full h-full flex items-center justify-center transition-all cursor-pointer relative z-20 active:scale-95 ${
-                        isActive
-                          ? 'text-white'
-                          : isPopoutActive
-                          ? 'text-blue-600 dark:text-blue-400'
-                          : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                      }`}
-                      title={item.label}
+                // ---------------------------------------------------------------
+                // 1. TAMPILAN COLLAPSED (Hanya Ikon Menu)
+                // ---------------------------------------------------------------
+                if (isCollapsed) {
+                  return (
+                    <SidebarMenuItem 
+                      key={item.id}
+                      className="relative flex justify-center my-0.5"
                     >
-                      <Icon className="w-5 h-5 shrink-0 -ml-2" />
-                      {item.hasSub && (
-                        <span className={`absolute right-3 top-2 w-1.5 h-1.5 rounded-full ${isActive ? 'bg-white' : 'bg-blue-500 dark:bg-blue-400'}`} />
-                      )}
-                    </button>
-                  </div>
-                );
-              }
-
-              // ---------------------------------------------------------------
-              // 2. TAMPILAN EXPANDED (Sesuai Screenshot Referensi GLACE)
-              // ---------------------------------------------------------------
-              return (
-                <div key={item.id} className="relative mb-1">
-                  <div
-                    ref={(el) => { itemRefs.current[item.id] = el; }}
-                    className="relative h-12 flex items-center justify-between pl-6 pr-4 cursor-pointer select-none"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => handleMenuClick(item.id, !!item.hasSub)}
-                      className="flex-1 flex items-center gap-3.5 text-left focus:outline-hidden cursor-pointer relative z-20"
-                    >
-                      <Icon
-                        className={`w-5 h-5 shrink-0 transition-colors ${
-                          isActive 
-                            ? 'text-white stroke-[2.2]' 
-                            : 'text-slate-500 group-hover:text-slate-900 dark:text-slate-400 dark:group-hover:text-white stroke-[1.8]'
-                        }`}
-                      />
-                      <span
-                        className={`text-sm truncate transition-colors ${
-                          isActive 
-                            ? 'text-white font-semibold' 
-                            : 'text-[#172033] dark:text-slate-300 font-medium hover:text-blue-600 dark:hover:text-white'
-                        }`}
+                      <div
+                        onMouseEnter={(e) => handleMouseEnterItem(item.id, e)}
+                        onMouseLeave={handleMouseLeaveItem}
+                        className="w-full flex justify-center"
                       >
-                        {item.label}
-                      </span>
-                    </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleIconClick(item.id, e, !!item.hasSub)}
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors cursor-pointer relative z-20 ${
+                            isActive
+                              ? 'bg-blue-50 dark:bg-[#272b38] text-blue-600 dark:text-white shadow-xs font-semibold'
+                              : isPopoutActive
+                              ? 'bg-slate-100 dark:bg-[#1e222d] text-slate-900 dark:text-white'
+                              : 'bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#272b38] hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                          title={item.label}
+                        >
+                          <Icon className="w-5 h-5 shrink-0" />
+                          {item.hasSub && (
+                            <span className={`absolute right-1.5 top-1.5 w-1.5 h-1.5 rounded-full ${isActive ? 'bg-blue-600 dark:bg-white' : 'bg-slate-400 dark:bg-slate-500'}`} />
+                          )}
+                        </button>
+                      </div>
+                    </SidebarMenuItem>
+                  );
+                }
 
-                    {item.hasSub && (
+                // ---------------------------------------------------------------
+                // 2. TAMPILAN EXPANDED (Shadcn SidebarMenu + Highlight Abu-Abu)
+                // ---------------------------------------------------------------
+                return (
+                  <SidebarMenuItem key={item.id} className="relative mb-0.5">
+                    <div
+                      className={`group flex items-center justify-between px-3 py-2 rounded-lg transition-colors cursor-pointer select-none ${
+                        isActive
+                          ? 'bg-blue-50 dark:bg-[#272b38] text-blue-600 dark:text-white font-medium'
+                          : 'bg-transparent text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#272b38] hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
                       <button
                         type="button"
-                        onClick={(e) => toggleSubmenu(item.id, e)}
-                        className={`p-1.5 rounded-md transition-colors relative z-20 cursor-pointer ${
-                          isActive
-                            ? 'text-white hover:bg-white/15'
-                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
-                        }`}
-                        title={isSubmenuOpen ? `Tutup submenu ${item.label}` : `Buka submenu ${item.label}`}
+                        onClick={() => handleMenuClick(item.id, !!item.hasSub)}
+                        className="flex-1 flex items-center gap-3 text-left focus:outline-hidden cursor-pointer"
                       >
-                        {isSubmenuOpen ? (
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        ) : (
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        )}
+                        <Icon
+                          className={`w-4 h-4 shrink-0 transition-colors ${
+                            isActive 
+                              ? 'text-blue-600 dark:text-white' 
+                              : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'
+                          }`}
+                        />
+                        <span className="text-xs truncate">
+                          {item.label}
+                        </span>
                       </button>
-                    )}
-                  </div>
 
-                  {/* Submenu List for Expanded Mode with timeline line and circular bullet points */}
-                  {item.hasSub && isSubmenuOpen && item.subItems && (
-                    <div className="relative pl-10 pr-2 py-1.5 space-y-1 ml-5 my-1">
-                      {/* Garis vertikal timeline */}
-                      <div className="absolute left-[26px] top-2 bottom-2 w-[1.5px] bg-[#E2E7EF] dark:bg-[#223554]" />
-
-                      {item.subItems.map((sub) => {
-                        const isSubSelected = currentTab === item.id && (
-                          selectedSubItem?.toLowerCase().trim() === sub.toLowerCase().trim()
-                        );
-                        return (
-                          <button
-                            key={sub}
-                            type="button"
-                            onClick={() => handleSubItemClick(item.id, sub)}
-                            className={`w-full text-left py-1.5 px-2 rounded-lg text-xs font-medium transition-all flex items-center gap-3 cursor-pointer group/sub relative z-10 ${
-                              isSubSelected
-                                ? 'text-blue-600 dark:text-white font-semibold'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                          >
-                            {/* Indikator titik bulat (Dot Bullet) */}
-                            <div className="w-[14px] flex items-center justify-center shrink-0">
-                              <span
-                                className={`w-2 h-2 rounded-full transition-all border ${
-                                  isSubSelected
-                                    ? 'bg-blue-600 dark:bg-blue-500 border-blue-500 dark:border-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.8)] scale-110'
-                                    : 'bg-white dark:bg-[#050E1D] border-slate-300 dark:border-[#3B4D6B] group-hover/sub:border-slate-500 dark:group-hover/sub:border-slate-300'
-                                }`}
-                              />
-                            </div>
-                            <span className="truncate">{sub}</span>
-                          </button>
-                        );
-                      })}
+                      {item.hasSub && (
+                        <button
+                          type="button"
+                          onClick={(e) => toggleSubmenu(item.id, e)}
+                          className={`p-1 rounded-md transition-colors cursor-pointer ${
+                            isActive
+                              ? 'text-blue-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-white hover:bg-blue-100/50 dark:hover:bg-white/10'
+                              : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/10'
+                          }`}
+                          title={isSubmenuOpen ? `Tutup submenu ${item.label}` : `Buka submenu ${item.label}`}
+                        >
+                          {isSubmenuOpen ? (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </div>
 
-        {/* Bagian Bawah Sidebar (Profil Pengguna & Status Workspace) */}
-        <div className={`border-t border-[#E2E7EF] dark:border-[#152338] bg-slate-50/80 dark:bg-[#050E1D] shrink-0 ${isCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}>
+                    {/* Submenu List dengan primitive shadcn SidebarMenuSub & Motion Smooth Accordion */}
+                    <AnimatePresence initial={false}>
+                      {item.hasSub && isSubmenuOpen && item.subItems && (
+                        <motion.div
+                          key={`sub-${item.id}`}
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ 
+                            height: 'auto', 
+                            opacity: 1,
+                            transition: {
+                              height: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
+                              opacity: { duration: 0.18, delay: 0.04 }
+                            }
+                          }}
+                          exit={{ 
+                            height: 0, 
+                            opacity: 0,
+                            transition: {
+                              height: { duration: 0.18, ease: [0.16, 1, 0.3, 1] },
+                              opacity: { duration: 0.12 }
+                            }
+                          }}
+                          className="overflow-hidden"
+                        >
+                          <SidebarMenuSub className="mx-2 my-1 pl-4 pr-1 space-y-0.5 border-l border-slate-200 dark:border-[#262b37]">
+                            {item.subItems.map((sub) => {
+                              const isSubSelected = currentTab === item.id && (
+                                selectedSubItem?.toLowerCase().trim() === sub.toLowerCase().trim()
+                              );
+                              return (
+                                <SidebarMenuSubItem key={sub}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSubItemClick(item.id, sub)}
+                                    className={`w-full text-left py-1.5 px-2 rounded-md text-[11px] transition-colors flex items-center gap-2 cursor-pointer ${
+                                      isSubSelected
+                                        ? 'bg-blue-50 dark:bg-[#272b38] text-blue-600 dark:text-white font-semibold'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#272b38]'
+                                    }`}
+                                  >
+                                    <span
+                                      className={`w-1.5 h-1.5 rounded-full transition-all ${
+                                        isSubSelected
+                                          ? 'bg-blue-600 dark:bg-white scale-110'
+                                          : 'bg-slate-300 dark:bg-[#404759]'
+                                      }`}
+                                    />
+                                    <span className="truncate">{sub}</span>
+                                  </button>
+                                </SidebarMenuSubItem>
+                              );
+                            })}
+                          </SidebarMenuSub>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </nav>
+        </SidebarContent>
+
+        {/* Profil Pengguna di Area Bawah Sidebar */}
+        <SidebarFooter className={`border-t border-slate-200 dark:border-[#1a1f2c] bg-white dark:bg-[#090B10] shrink-0 ${isCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}>
+          {/* Kartu Profil Pengguna */}
           <button
             type="button"
             onClick={onViewLanding}
-            className={`rounded-xl bg-white dark:bg-[#091426] hover:bg-slate-100 dark:hover:bg-[#0d1b32] border border-[#E2E7EF] dark:border-[#1a2b44] hover:border-blue-500/50 transition-all flex items-center text-left group cursor-pointer shadow-2xs ${
-              isCollapsed ? 'w-11 h-11 justify-center p-0' : 'w-full p-2.5 gap-3'
+            className={`rounded-lg bg-slate-50 dark:bg-[#13161f] hover:bg-slate-100 dark:hover:bg-[#1d222e] border border-slate-200 dark:border-[#1e2330] hover:border-slate-300 dark:hover:border-slate-600 transition-all flex items-center text-left group cursor-pointer ${
+              isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full p-2 gap-2.5 min-w-0'
             }`}
             title="Buka Landing Page Publik Glace"
           >
             {/* Avatar Pengguna */}
-            <div className={`rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0 ${
-              isCollapsed ? 'w-8 h-8' : 'w-9 h-9'
+            <div className={`rounded-md bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs flex items-center justify-center shrink-0 ${
+              isCollapsed ? 'w-7 h-7' : 'w-8 h-8'
             }`}>
               {userName ? userName.charAt(0).toUpperCase() : 'U'}
             </div>
@@ -674,205 +637,203 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed && (
               <>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-[#172033] dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                    {userName || 'User Engineer'}
+                  <p className="text-xs font-semibold text-slate-800 dark:text-white group-hover:text-slate-900 dark:group-hover:text-slate-200 truncate">
+                    {userName || 'Bagoes Nugraha pw'}
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate flex items-center gap-1.5 mt-0.5">
-                    <span>{isTrial ? 'Free Trial' : (userEmail || 'Glace Workspace')}</span>
-                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                    <span>{isTrial ? 'Free Trial' : (userEmail || 'bagoesnugrahapw@gmail.com')}</span>
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                   </p>
                 </div>
 
-                <div className="text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors p-0.5">
+                <div className="text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-white transition-colors p-0.5 shrink-0">
                   <ExternalLink className="w-3.5 h-3.5" />
                 </div>
               </>
             )}
           </button>
-        </div>
+        </SidebarFooter>
       </aside>
 
       {/* =========================================================================
-          DESKTOP: POPOUT / FLYOUT SUBMENU SAAT SIDEBAR COLLAPSE (HOVER)
-          - Hanya dirender pada layar besar (>= 1024px) dengan pointer fine
+          DESKTOP: POPOUT SUBMENU SAAT SIDEBAR COLLAPSE (HOVER) DENGAN TEMA ABU-ABU
           ========================================================================= */}
-      {isCollapsed && activePopoutItem && activePopoutItem.hasSub && (
-        <div
-          ref={popoutRef}
-          onMouseEnter={handleMouseEnterPopout}
-          onMouseLeave={handleMouseLeavePopout}
-          style={{ 
-            top: `${Math.min(Math.max(12, popoutPos.top - 8), window.innerHeight - 380)}px`,
-            left: '78px'
-          }}
-          className="hidden lg:block fixed z-50 w-64 bg-white dark:bg-[#121624] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl p-3 animate-in fade-in slide-in-from-left-2 duration-200 select-none"
-        >
-          {/* Header Popout: Nama Modul & Arahkan ke Dashboard Utama */}
-          <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-2">
-              <activePopoutItem.icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="font-bold text-xs uppercase tracking-wider text-slate-900 dark:text-white truncate">
-                {activePopoutItem.label}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                onSelectTab(activePopoutItem.id);
-                if (onSelectSubItem) onSelectSubItem('');
-                setPopoutTabId(null);
-              }}
-              className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-            >
-              Overview
-            </button>
-          </div>
-
-          {/* Daftar Submenu Popout Desktop */}
-          <div className="py-1 space-y-0.5 max-h-[320px] overflow-y-auto">
-            {activePopoutItem.subItems?.map((sub) => {
-              const isSubSelected = currentTab === activePopoutItem.id && (
-                selectedSubItem?.toLowerCase().trim() === sub.toLowerCase().trim()
-              );
-
-              return (
-                <button
-                  key={sub}
-                  type="button"
-                  onClick={() => handleSubItemClick(activePopoutItem.id, sub)}
-                  className={`w-full text-left py-2 px-3 rounded-lg text-xs font-medium transition-all flex items-center justify-between cursor-pointer ${
-                    isSubSelected
-                      ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <span className="truncate">{sub}</span>
-                  {isSubSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          MOBILE / TOUCHSCREEN: SUBMENU BOTTOM SHEET & TOUCH PANEL
-          - Muncul ketika ikon modul ber-submenu diketuk pada perangkat HP / Layar Sentuh
-          - Tampil utuh di viewport (360px, 375px, 390px, 430px)
-          - Header dengan Judul Modul + Pilihan Dashboard Utama di Bagian Teratas
-          - Seluruh submenu ditampilkan dengan target sentuh nyaman (min 44px)
-          - Tutup dengan tombol 'Tutup' atau ketuk backdrop luar
-          ========================================================================= */}
-      {activeMobileSubmenuItem && (
-        <div className="fixed inset-0 z-60 flex flex-col justify-end lg:hidden animate-in fade-in duration-200">
-          {/* Backdrop Luar */}
-          <div 
-            onClick={() => setMobileSubmenuTabId(null)}
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
-          />
-
-          {/* Panel Sheet Submenu */}
-          <div className="relative w-full max-h-[85vh] bg-white dark:bg-[#121624] border-t border-slate-200 dark:border-slate-800 rounded-t-3xl shadow-2xl p-5 flex flex-col z-10 animate-in slide-in-from-bottom-5 duration-250">
-            {/* Grab Handle */}
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-4" />
-
-            {/* Header Panel */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                  <activeMobileSubmenuItem.icon className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">
-                    {activeMobileSubmenuItem.label}
-                  </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Pilih submenu atau buka dashboard utama
-                  </p>
-                </div>
+      <AnimatePresence>
+        {isCollapsed && activePopoutItem && activePopoutItem.hasSub && (
+          <motion.div
+            ref={popoutRef}
+            initial={{ opacity: 0, x: -8, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -6, scale: 0.98 }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            onMouseEnter={handleMouseEnterPopout}
+            onMouseLeave={handleMouseLeavePopout}
+            style={{ 
+              top: `${Math.min(Math.max(12, popoutPos.top - 8), window.innerHeight - 380)}px`,
+              left: '78px'
+            }}
+            className="hidden lg:block fixed z-50 w-60 bg-[#161922] border border-[#272c3b] rounded-xl shadow-2xl p-2.5 select-none"
+          >
+            {/* Header Popout */}
+            <div className="px-2.5 py-1.5 border-b border-[#232734] flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <activePopoutItem.icon className="w-3.5 h-3.5 text-slate-300" />
+                <span className="font-semibold text-xs text-white truncate">
+                  {activePopoutItem.label}
+                </span>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setMobileSubmenuTabId(null)}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Tutup Submenu"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Daftar Menu & Submenu Responsif untuk Sentuhan */}
-            <div className="overflow-y-auto py-3 space-y-2 flex-1">
-              {/* 1. Opsi Teratas: Dashboard Utama Modul */}
               <button
                 type="button"
                 onClick={() => {
-                  onSelectTab(activeMobileSubmenuItem.id);
+                  onSelectTab(activePopoutItem.id);
                   if (onSelectSubItem) onSelectSubItem('');
-                  setMobileSubmenuTabId(null);
-                  if (onCloseMobileDrawer) onCloseMobileDrawer();
+                  setPopoutTabId(null);
                 }}
-                className={`w-full p-3.5 rounded-xl text-left text-xs sm:text-sm font-semibold flex items-center justify-between transition-all active:scale-[0.98] cursor-pointer ${
-                  currentTab === activeMobileSubmenuItem.id && (!selectedSubItem || selectedSubItem === '')
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80'
-                }`}
+                className="text-[11px] text-slate-400 hover:text-white hover:underline cursor-pointer"
               >
+                Overview
+              </button>
+            </div>
+
+            {/* Daftar Submenu Popout */}
+            <div className="py-1 space-y-0.5 max-h-[300px] overflow-y-auto">
+              {activePopoutItem.subItems?.map((sub) => {
+                const isSubSelected = currentTab === activePopoutItem.id && (
+                  selectedSubItem?.toLowerCase().trim() === sub.toLowerCase().trim()
+                );
+
+                return (
+                  <button
+                    key={sub}
+                    type="button"
+                    onClick={() => handleSubItemClick(activePopoutItem.id, sub)}
+                    className={`w-full text-left py-1.5 px-2.5 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                      isSubSelected
+                        ? 'bg-[#272b38] text-white font-semibold'
+                        : 'text-slate-400 hover:bg-[#272b38] hover:text-white'
+                    }`}
+                  >
+                    <span className="truncate">{sub}</span>
+                    {isSubSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-white shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* =========================================================================
+          MOBILE / TOUCHSCREEN: SUBMENU BOTTOM SHEET
+          ========================================================================= */}
+      <AnimatePresence>
+        {activeMobileSubmenuItem && (
+          <div className="fixed inset-0 z-60 flex flex-col justify-end lg:hidden">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => setMobileSubmenuTabId(null)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs"
+            />
+
+            <motion.div 
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-h-[85vh] bg-[#14161f] border-t border-[#232733] rounded-t-2xl shadow-2xl p-4 flex flex-col z-10"
+            >
+              <div className="w-10 h-1 bg-[#2e3344] rounded-full mx-auto mb-3" />
+
+              <div className="flex items-center justify-between pb-3 border-b border-[#232733] shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <LayoutDashboard className="w-4 h-4 opacity-80" />
-                  <span>Dashboard {activeMobileSubmenuItem.label}</span>
+                  <div className="w-8 h-8 rounded-lg bg-[#202430] flex items-center justify-center text-white">
+                    <activeMobileSubmenuItem.icon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm text-white">
+                      {activeMobileSubmenuItem.label}
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      Pilih submenu modul
+                    </p>
+                  </div>
                 </div>
-                <ChevronRight className="w-4 h-4 opacity-60" />
-              </button>
 
-              <div className="pt-2 pb-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-1">
-                  Submenu Disiplin & Fitur
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenuTabId(null)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#202430]"
+                  title="Tutup Submenu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* 2. Daftar Seluruh Submenu */}
-              <div className="space-y-1.5">
-                {activeMobileSubmenuItem.subItems?.map((sub) => {
-                  const isSubSelected = currentTab === activeMobileSubmenuItem.id && (
-                    selectedSubItem?.toLowerCase().trim() === sub.toLowerCase().trim()
-                  );
+              <div className="overflow-y-auto py-2 space-y-1.5 flex-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectTab(activeMobileSubmenuItem.id);
+                    if (onSelectSubItem) onSelectSubItem('');
+                    setMobileSubmenuTabId(null);
+                    if (onCloseMobileDrawer) onCloseMobileDrawer();
+                  }}
+                  className={`w-full p-2.5 rounded-lg text-left text-xs font-semibold flex items-center justify-between transition-colors ${
+                    currentTab === activeMobileSubmenuItem.id && (!selectedSubItem || selectedSubItem === '')
+                      ? 'bg-[#272b38] text-white'
+                      : 'bg-[#1b1e28] text-slate-300 border border-[#262a38]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span>Dashboard {activeMobileSubmenuItem.label}</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 opacity-60" />
+                </button>
 
-                  return (
-                    <button
-                      key={sub}
-                      type="button"
-                      onClick={() => handleSubItemClick(activeMobileSubmenuItem.id, sub)}
-                      className={`w-full py-3 px-3.5 rounded-xl text-left text-xs sm:text-sm font-medium transition-all flex items-center justify-between active:scale-[0.98] cursor-pointer ${
-                        isSubSelected
-                          ? 'bg-blue-600 text-white font-semibold shadow-xs'
-                          : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
-                      }`}
-                    >
-                      <span className="truncate">{sub}</span>
-                      <ChevronRight className={`w-3.5 h-3.5 ${isSubSelected ? 'text-white' : 'text-slate-400'}`} />
-                    </button>
-                  );
-                })}
+                <div className="space-y-1 pt-1">
+                  {activeMobileSubmenuItem.subItems?.map((sub) => {
+                    const isSubSelected = currentTab === activeMobileSubmenuItem.id && (
+                      selectedSubItem?.toLowerCase().trim() === sub.toLowerCase().trim()
+                    );
+
+                    return (
+                      <button
+                        key={sub}
+                        type="button"
+                        onClick={() => handleSubItemClick(activeMobileSubmenuItem.id, sub)}
+                        className={`w-full py-2.5 px-3 rounded-lg text-left text-xs font-medium transition-colors flex items-center justify-between ${
+                          isSubSelected
+                            ? 'bg-[#272b38] text-white font-semibold'
+                            : 'text-slate-300 hover:bg-[#272b38]'
+                        }`}
+                      >
+                        <span className="truncate">{sub}</span>
+                        <ChevronRight className={`w-3.5 h-3.5 ${isSubSelected ? 'text-white' : 'text-slate-500'}`} />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Tombol Tutup di Bagian Bawah */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
-              <button
-                type="button"
-                onClick={() => setMobileSubmenuTabId(null)}
-                className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs sm:text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              >
-                Tutup
-              </button>
-            </div>
+              <div className="pt-2 border-t border-[#232733] shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenuTabId(null)}
+                  className="w-full py-2.5 rounded-lg bg-[#202430] text-slate-300 font-medium text-xs hover:bg-[#282d3d]"
+                >
+                  Tutup
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 };

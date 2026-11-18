@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem } from '../../utils/motionVariants';
 import { ArrowLeft, Plus, Edit2, X, Check } from 'lucide-react';
 
 interface DrawingType {
@@ -95,9 +97,14 @@ export const DrawingTypesView: React.FC<DrawingTypesViewProps> = ({ onBack }) =>
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6"
+    >
       {/* Header */}
-      <div>
+      <motion.div variants={staggerItem}>
         {onBack && (
           <button
             onClick={onBack}
@@ -118,10 +125,13 @@ export const DrawingTypesView: React.FC<DrawingTypesViewProps> = ({ onBack }) =>
             <span>+ Tipe Baru</span>
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Types Table Matching Screenshot 4 */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs">
+      <motion.div
+        variants={staggerItem}
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-xs"
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
@@ -171,7 +181,7 @@ export const DrawingTypesView: React.FC<DrawingTypesViewProps> = ({ onBack }) =>
             </tbody>
           </table>
         </div>
-      </div>
+      </motion.div>
 
       {/* Edit / Create Modal */}
       {showModal && (
@@ -257,7 +267,7 @@ export const DrawingTypesView: React.FC<DrawingTypesViewProps> = ({ onBack }) =>
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

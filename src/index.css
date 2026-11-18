@@ -3,72 +3,108 @@
 
 @layer base {
   :root {
-    --bg-main: #F5F7FA;
+    --background: #ffffff;
+    --foreground: #090B10;
+    --card: #ffffff;
+    --card-foreground: #090B10;
+    --popover: #ffffff;
+    --popover-foreground: #090B10;
+    --primary: #2563eb;
+    --primary-foreground: #ffffff;
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #2563eb;
+    --radius: 0.75rem;
+
+    --bg-main: #f8fafc;
     --bg-card: #ffffff;
     --bg-sidebar: #ffffff;
     --bg-header: #ffffff;
-    --border-subtle: #E2E7EF;
+    --bg-footer: #ffffff;
+    --border-subtle: #e2e8f0;
     --border-strong: #cbd5e1;
-    --text-primary: #172033;
-    --text-secondary: #64748B;
-    --text-muted: #94a3b8;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
     --card-hover: #f1f5f9;
   }
 
   .dark {
-    --bg-main: #0b0d13;
-    --bg-card: #131722;
-    --bg-sidebar: #050E1D;
-    --bg-header: #10131d;
-    --border-subtle: #152338;
-    --border-strong: #232938;
+    --background: #090B10;
+    --foreground: #f8fafc;
+    --card: #11141d;
+    --card-foreground: #f8fafc;
+    --popover: #090B10;
+    --popover-foreground: #f8fafc;
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: #161b26;
+    --secondary-foreground: #f8fafc;
+    --muted: #161b26;
+    --muted-foreground: #94a3b8;
+    --accent: #161b26;
+    --accent-foreground: #f8fafc;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f8fafc;
+    --border: #1e222d;
+    --input: #1a1f2c;
+    --ring: #3b82f6;
+
+    --bg-main: #090B10;
+    --bg-card: #11141d;
+    --bg-sidebar: #090B10;
+    --bg-header: #090B10;
+    --bg-footer: #090B10;
+    --border-subtle: #1a1f2c;
+    --border-strong: #242b3d;
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
-    --card-hover: #191f2e;
+    --card-hover: #161b26;
   }
 
   html {
-    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   body {
     background-color: var(--bg-main);
     color: var(--text-primary);
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    transition: background-color 0.25s ease, color 0.25s ease;
     @apply antialiased font-sans select-none;
   }
 
-  /* Light Mode Specific Overrides & Tokens */
+  /* Universal Layout Semantics */
   aside {
-    background-color: var(--bg-sidebar);
-    border-color: var(--border-subtle);
-  }
-
-  header {
-    background-color: var(--bg-header);
-    border-color: var(--border-subtle);
-  }
-
-  main {
-    background-color: var(--bg-main);
-  }
-
-  /* Universal Dark Mode Adaptations for Dashboard & Workspaces */
-  .dark aside {
     background-color: var(--bg-sidebar) !important;
     border-color: var(--border-subtle) !important;
   }
 
-  .dark header {
+  header {
     background-color: var(--bg-header) !important;
     border-color: var(--border-subtle) !important;
   }
 
-  .dark main {
+  footer {
+    background-color: var(--bg-footer) !important;
+    border-color: var(--border-subtle) !important;
+  }
+
+  main {
     background-color: var(--bg-main) !important;
   }
 
+  /* Dark mode overrides */
   .dark .bg-white {
     background-color: var(--bg-card) !important;
   }
@@ -78,15 +114,35 @@
   .dark .bg-slate-50\/60,
   .dark .bg-slate-50\/70,
   .dark .bg-slate-50\/80,
-  .dark .bg-slate-50\/90 {
-    background-color: var(--bg-main) !important;
+  .dark .bg-slate-50\/90,
+  .dark .bg-slate-100,
+  .dark .bg-slate-100\/70,
+  .dark .bg-slate-100\/80,
+  .dark .bg-slate-100\/90,
+  .dark .bg-slate-900,
+  .dark .bg-slate-900\/60,
+  .dark .bg-slate-900\/70,
+  .dark .bg-slate-900\/80,
+  .dark .bg-slate-950,
+  .dark .bg-\[\#0b0d13\],
+  .dark .bg-\[\#0b0f17\],
+  .dark .bg-\[\#f8fafc\] {
+    background-color: var(--bg-card) !important;
   }
 
   .dark .border-slate-100,
   .dark .border-slate-200,
   .dark .border-slate-200\/60,
   .dark .border-slate-200\/80,
-  .dark .border-slate-200\/90 {
+  .dark .border-slate-200\/90,
+  .dark .border-slate-700,
+  .dark .border-slate-700\/80,
+  .dark .border-slate-800,
+  .dark .border-slate-800\/60,
+  .dark .border-slate-800\/80,
+  .dark .border-slate-800\/90,
+  .dark .border-slate-900,
+  .dark .border-\[\#1e222d\] {
     border-color: var(--border-subtle) !important;
   }
 
@@ -107,18 +163,17 @@
 
   .dark .hover\:bg-slate-50:hover,
   .dark .hover\:bg-slate-50\/70:hover,
-  .dark .hover\:bg-slate-50\/60:hover {
+  .dark .hover\:bg-slate-50\/60:hover,
+  .dark .hover\:bg-slate-100:hover,
+  .dark .hover\:bg-slate-800:hover,
+  .dark .hover\:bg-slate-800\/60:hover {
     background-color: var(--card-hover) !important;
-  }
-
-  .dark .hover\:bg-slate-100:hover {
-    background-color: #191f2e !important;
   }
 
   .dark input,
   .dark textarea,
   .dark select {
-    background-color: #181d2c !important;
+    background-color: #131722 !important;
     color: #f8fafc !important;
     border-color: var(--border-strong) !important;
   }
@@ -128,9 +183,18 @@
     color: #64748b !important;
   }
 
-  .dark footer {
-    background-color: var(--bg-header) !important;
-    border-color: var(--border-subtle) !important;
+  /* Light mode form controls */
+  :root:not(.dark) input,
+  :root:not(.dark) textarea,
+  :root:not(.dark) select {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  :root:not(.dark) input::placeholder,
+  :root:not(.dark) textarea::placeholder {
+    color: #94a3b8 !important;
   }
 }
 
@@ -213,44 +277,44 @@
 
 /* =========================================================================
    INTERACTIVE FLOATING HOVER CARD (PREMIUM ENTERPRISE GLACE)
-   - translateY(-6px) & scale(1.01)
-   - Natural elevated shadow
-   - Smooth 300ms cubic-bezier transition
-   - Micro-animation pada badge / number
+   - translateY(-4px)
+   - Natural elevated soft shadow
+   - Smooth 250ms cubic-bezier transition
+   - Border slightly lighter on hover
+   - Touch screen media query (hover: hover and pointer: fine)
    - prefers-reduced-motion support
    ========================================================================= */
-.glace-floating-card {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+.glace-floating-card,
+.glace-card-interactive {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               border-color 0.25s ease,
               background-color 0.25s ease;
   will-change: transform, box-shadow;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .glace-floating-card:hover {
-    transform: translateY(-6px) scale(1.01);
-    box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.08), 
-                0 4px 12px -2px rgba(15, 23, 42, 0.04);
-    border-color: #3b82f6 !important;
+  .glace-floating-card:hover,
+  .glace-card-interactive:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.5), 
+                0 4px 10px -2px rgba(255, 255, 255, 0.03);
+    border-color: #333b4f !important;
   }
 
-  .dark .glace-floating-card:hover {
-    box-shadow: 0 20px 36px -10px rgba(0, 0, 0, 0.45), 
-                0 4px 16px -2px rgba(59, 130, 246, 0.15);
-    border-color: #3b82f6 !important;
-  }
-
-  .glace-floating-card:hover .glace-card-badge {
-    transform: scale(1.08) translateY(-1px);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  .dark .glace-floating-card:hover,
+  .dark .glace-card-interactive:hover {
+    box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.65), 
+                0 4px 12px -2px rgba(255, 255, 255, 0.04);
+    border-color: #333b4f !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .glace-floating-card,
   .glace-floating-card:hover,
-  .glace-card-badge {
+  .glace-card-interactive,
+  .glace-card-interactive:hover {
     transform: none !important;
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
   }

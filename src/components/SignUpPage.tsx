@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Bookmark, ArrowUpRight, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface SignUpPageProps {
   onSignUpSuccess: (email: string, name: string) => void;
@@ -13,7 +15,6 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
   onGoToLanding,
 }) => {
   const [fullName, setFullName] = useState('');
-  const [company, setCompany] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -35,12 +36,12 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
     }
 
     if (!email.trim()) {
-      setError('Work Email wajib diisi.');
+      setError('Email wajib diisi.');
       return;
     }
 
     if (!isValidEmail(email.trim())) {
-      setError('Format email tidak valid (contoh: engineer@company.com).');
+      setError('Format email tidak valid (contoh: engineer@glace.id).');
       return;
     }
 
@@ -49,12 +50,11 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password minimal harus 6 karakter.');
+    if (password.length < 8) {
+      setError('Password minimal harus 8 karakter.');
       return;
     }
 
-    // Validasi kecocokan Confirm Password dengan Password
     if (password !== confirmPassword) {
       setError('Password dan Confirm Password tidak cocok!');
       return;
@@ -73,223 +73,306 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
     }, 450);
   };
 
+  // Handler GitHub OAuth untuk Sign up (sesuai backend check)
+  const handleGitHubSignUp = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const res = await fetch('http://localhost:3001/api/auth/github/url');
+      if (!res.ok) {
+        throw new Error('Endpoint GitHub OAuth belum aktif di server backend.');
+      }
+      const data = await res.json();
+
+      if (!data.success || !data.url) {
+        setIsLoading(false);
+        setError(data.message || 'GitHub OAuth belum dikonfigurasi di server backend (.env).');
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (err: any) {
+      setIsLoading(false);
+      setError(
+        'GitHub OAuth backend belum siap: Silakan tambahkan endpoint /api/auth/github/url dan kredensial GITHUB_CLIENT_ID di server.ts.'
+      );
+    }
+  };
+
   return (
-    <div className="min-h-screen w-full bg-[#121214] flex items-center justify-center p-3 sm:p-6 md:p-8 font-sans select-none">
-      {/* Outer Card with Rounded Corners matching Login screenshot */}
-      <div className="w-full max-w-6xl h-auto md:h-[720px] bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row border border-slate-800/40 relative">
-        
-        {/* Tombol Kembali ke Homepage di pojok kiri atas */}
-        <button
-          type="button"
-          onClick={onGoToLanding}
-          className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white/90 hover:text-white text-xs backdrop-blur-md transition-colors"
-          title="Kembali ke Homepage"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Kembali</span>
-        </button>
-
-        {/* =========================================================================
-            KOLOM KIRI: PERSIS 100% SAMA DENGAN HALAMAN LOGIN
-            ========================================================================= */}
-        <div className="w-full md:w-1/2 relative bg-[#090a0d] p-8 md:p-14 flex flex-col justify-between overflow-hidden text-white">
-          {/* Background Image dengan Dark Contrast Overlay SAMA PERSIS */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity scale-105"
-            style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1541888946425-d0fbb186156f?q=80&w=1200&auto=format&fit=crop')`,
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/75 to-black/60" />
-
-          {/* Top Logo */}
-          <div className="relative z-10 flex items-center justify-between pt-8 md:pt-0">
-            <div className="w-12 h-12 rounded-xl bg-white text-black flex items-center justify-center font-black tracking-tighter text-2xl shadow-lg">
+    <div className="grid h-svh max-h-svh lg:grid-cols-2 bg-[#090a0d] text-slate-100 font-sans selection:bg-blue-600 selection:text-white overflow-hidden">
+      {/* =========================================================================
+          KOLOM KIRI: Form Sign Up Resmi shadcn signup-02 (Fit One-Screen)
+          ========================================================================= */}
+      <div className="h-full flex flex-col justify-between p-4 sm:p-6 lg:p-8 bg-[#0c0d12] overflow-y-auto lg:overflow-hidden relative z-10">
+        {/* Header Bar: Brand Logo GLACE & Tombol Kembali */}
+        <div className="flex items-center justify-between shrink-0">
+          <button
+            type="button"
+            onClick={onGoToLanding}
+            className="flex items-center gap-2 font-bold tracking-tight text-white group cursor-pointer focus:outline-none"
+          >
+            <div className="flex size-6 sm:size-7 items-center justify-center rounded-lg bg-white text-black font-black text-xs shadow-md">
               <span className="italic">//</span>
             </div>
-          </div>
+            <span className="text-sm sm:text-base tracking-wider">GLACE</span>
+          </button>
 
-          {/* Center Title: "GLACE" */}
-          <div className="relative z-10 my-auto py-10 md:py-0">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
-              GLACE
-            </h1>
-            <p className="mt-4 text-sm sm:text-base text-slate-300 font-normal leading-relaxed max-w-md">
-              The Next-Gen Unified AI Engineering Workspace for Civil, Electrical, Mechanical & Infrastructure Intelligence.
-            </p>
-
-            <div className="mt-6">
-              <button 
-                type="button"
-                onClick={onGoToLanding}
-                className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-colors group cursor-pointer"
-              >
-                <span className="border-b border-slate-600 group-hover:border-white pb-0.5">glace.kreasi.digital</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onGoToLanding}
+            className="text-xs text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-full px-2.5 py-1 h-auto transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali</span>
+          </Button>
         </div>
 
-        {/* =========================================================================
-            KOLOM KANAN: FORM SIGN UP DENGAN PROPORSI & TEMA KONSISTEN
-            ========================================================================= */}
-        <div className="w-full md:w-1/2 bg-white p-8 sm:p-12 md:p-14 flex flex-col justify-between relative overflow-y-auto">
-          {/* Top Right Bookmark Icon */}
-          <div className="flex justify-end">
-            <button 
-              type="button"
-              className="w-10 h-10 rounded-full bg-slate-500/80 hover:bg-slate-600 text-white flex items-center justify-center transition-colors shadow-xs"
-              title="Bookmark"
-            >
-              <Bookmark className="w-4 h-4 fill-white" />
-            </button>
-          </div>
-
-          {/* Form Container */}
-          <div className="max-w-sm w-full mx-auto my-auto py-2">
-            {/* Header Titles */}
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+        {/* Center Form Container (Kompak & Presisi tanpa Scroll di Desktop) */}
+        <div className="flex flex-1 items-center justify-center py-2 sm:py-3 shrink-0">
+          <div className="w-full max-w-sm space-y-3.5 sm:space-y-4">
+            {/* Title & Subtitle */}
+            <div className="flex flex-col items-center gap-1 text-center">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
                 Create your account
-              </h2>
-              <p className="text-xs text-slate-500 mt-1.5">
-                Join the Glace Engineering Workspace
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-400">
+                Fill in the form below to create your account
               </p>
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 text-xs font-medium flex items-center justify-between">
+              <div className="p-2 sm:p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium flex items-center justify-between">
                 <span>{error}</span>
                 <button 
                   type="button" 
                   onClick={() => setError('')} 
-                  className="text-rose-400 hover:text-rose-700 ml-2"
+                  className="text-rose-400 hover:text-rose-200 ml-2 cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
             )}
 
-            {/* Sign Up Form */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <input
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
+              {/* Full Name */}
+              <div className="space-y-1">
+                <label 
+                  htmlFor="fullName" 
+                  className="text-xs font-medium text-slate-300 block"
+                >
+                  Full Name
+                </label>
+                <Input
+                  id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => {
                     setFullName(e.target.value);
                     if (error) setError('');
                   }}
-                  placeholder="Full Name"
+                  placeholder="John Doe"
                   required
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-slate-400 transition-colors"
+                  className="h-9 px-3 bg-slate-900/80 border-slate-800 text-slate-100 placeholder:text-slate-500 rounded-lg text-xs focus-visible:border-slate-500 focus-visible:ring-1 focus-visible:ring-slate-400"
                 />
               </div>
 
-              <div>
-                <input
-                  type="text"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Company / Organization (Optional)"
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-slate-400 transition-colors"
-                />
-              </div>
-
-              <div>
-                <input
+              {/* Email + Description */}
+              <div className="space-y-1">
+                <label 
+                  htmlFor="email" 
+                  className="text-xs font-medium text-slate-300 block"
+                >
+                  Email
+                </label>
+                <Input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
                     if (error) setError('');
                   }}
-                  placeholder="Work Email"
+                  placeholder="m@example.com"
                   required
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-slate-400 transition-colors"
+                  className="h-9 px-3 bg-slate-900/80 border-slate-800 text-slate-100 placeholder:text-slate-500 rounded-lg text-xs focus-visible:border-slate-500 focus-visible:ring-1 focus-visible:ring-slate-400"
                 />
+                <p className="text-[11px] text-slate-400 leading-tight">
+                  We'll use this to contact you. We will not share your email with anyone else.
+                </p>
               </div>
 
-              <div>
-                <input
+              {/* Password + Description */}
+              <div className="space-y-1">
+                <label 
+                  htmlFor="password" 
+                  className="text-xs font-medium text-slate-300 block"
+                >
+                  Password
+                </label>
+                <Input
+                  id="password"
                   type="password"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
                     if (error) setError('');
                   }}
-                  placeholder="Password"
+                  placeholder="••••••••"
                   required
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-slate-400 transition-colors"
+                  className="h-9 px-3 bg-slate-900/80 border-slate-800 text-slate-100 placeholder:text-slate-500 rounded-lg text-xs focus-visible:border-slate-500 focus-visible:ring-1 focus-visible:ring-slate-400"
                 />
+                <p className="text-[11px] text-slate-400 leading-tight">
+                  Must be at least 8 characters long.
+                </p>
               </div>
 
-              <div>
-                <input
+              {/* Confirm Password + Description */}
+              <div className="space-y-1">
+                <label 
+                  htmlFor="confirmPassword" 
+                  className="text-xs font-medium text-slate-300 block"
+                >
+                  Confirm Password
+                </label>
+                <Input
+                  id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
                     if (error) setError('');
                   }}
-                  placeholder="Confirm Password"
+                  placeholder="••••••••"
                   required
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-slate-400 transition-colors"
+                  className="h-9 px-3 bg-slate-900/80 border-slate-800 text-slate-100 placeholder:text-slate-500 rounded-lg text-xs focus-visible:border-slate-500 focus-visible:ring-1 focus-visible:ring-slate-400"
                 />
+                <p className="text-[11px] text-slate-400 leading-tight">
+                  Please confirm your password.
+                </p>
               </div>
 
               {/* Checkbox Terms of Service & Privacy Policy */}
-              <div className="flex items-start gap-2 pt-1">
+              <div className="flex items-start gap-2 pt-0.5">
                 <input
                   type="checkbox"
-                  id="terms-checkbox"
+                  id="agreeTerms"
                   checked={agreeTerms}
                   onChange={(e) => {
                     setAgreeTerms(e.target.checked);
                     if (error) setError('');
                   }}
-                  className="mt-0.5 rounded-sm border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="mt-0.5 size-3.5 rounded-sm border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                 />
-                <label htmlFor="terms-checkbox" className="text-[11px] text-slate-500 leading-tight cursor-pointer">
+                <label htmlFor="agreeTerms" className="text-[11px] text-slate-400 leading-tight cursor-pointer">
                   I agree to the{' '}
-                  <span className="text-slate-700 font-medium hover:underline">Terms of Service</span> and{' '}
-                  <span className="text-slate-700 font-medium hover:underline">Privacy Policy</span>.
+                  <span className="text-white font-medium hover:underline">Terms of Service</span> and{' '}
+                  <span className="text-white font-medium hover:underline">Privacy Policy</span>.
                 </label>
               </div>
 
-              {/* Tombol Create Account */}
-              <button
+              {/* Tombol Create Account Utama */}
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 bg-[#8b9cb3] hover:bg-[#7b8ca3] disabled:opacity-60 text-white rounded-lg text-xs font-semibold tracking-wide transition-colors shadow-2xs mt-2 cursor-pointer flex items-center justify-center gap-2"
+                className="w-full h-9 bg-white hover:bg-slate-200 text-slate-900 font-semibold text-xs rounded-lg transition-colors cursor-pointer shadow-sm disabled:opacity-60 mt-1"
               >
-                {isLoading ? <span>Membuat Akun...</span> : <span>Create Account</span>}
-              </button>
+                {isLoading ? 'Creating Account...' : 'Create Account'}
+              </Button>
 
-              {/* Link ke Sign In */}
-              <div className="text-center text-[11px] text-slate-500 pt-1">
-                Already have an account?{' '}
-                <button 
-                  type="button" 
-                  onClick={onGoToSignIn}
-                  className="text-blue-600 hover:underline font-semibold"
-                >
-                  Sign in
-                </button>
+              {/* Separator: Or continue with */}
+              <div className="relative my-2 sm:my-3 flex items-center justify-center">
+                <div className="w-full border-t border-slate-800" />
+                <span className="absolute bg-[#0c0d12] px-3 text-[10px] text-slate-500 uppercase tracking-wider">
+                  Or continue with
+                </span>
               </div>
-            </form>
-          </div>
 
-          {/* Footer Text */}
-          <div className="text-center text-[11px] text-slate-400 pt-2">
-            © 2026 PT. Glace Kreasi Digital. All rights reserved.
+              {/* GitHub OAuth Button (Resmi block signup-02) */}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGitHubSignUp}
+                disabled={isLoading}
+                className="w-full h-9 bg-slate-900/90 border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  className="w-4 h-4"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  />
+                </svg>
+                <span>Sign up with GitHub</span>
+              </Button>
+            </form>
+
+            {/* Navigasi: Already have an account? Sign in */}
+            <div className="text-center text-xs text-slate-400 pt-0.5">
+              Already have an account?{' '}
+              <Button 
+                type="button" 
+                variant="link"
+                onClick={onGoToSignIn}
+                className="text-white hover:underline underline-offset-4 font-semibold p-0 h-auto text-xs"
+              >
+                Sign in
+              </Button>
+            </div>
           </div>
         </div>
 
+        {/* Footer info */}
+        <div className="text-center text-[11px] text-slate-500 shrink-0">
+          © 2026 PT. Glace Kreasi Digital. All rights reserved.
+        </div>
+      </div>
+
+      {/* =========================================================================
+          KOLOM KANAN: Cover Image & Industrial Branding GLACE (Fit Full Viewport)
+          ========================================================================= */}
+      <div className="relative hidden bg-[#060709] lg:block overflow-hidden border-l border-slate-800/50 h-full">
+        {/* Cover Image Background */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-85 mix-blend-luminosity scale-105"
+          style={{
+            backgroundImage: `url('/signup-cover.jpg')`,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/60" />
+        <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/70" />
+
+        {/* GLACE Center Watermark Branding */}
+        <div className="relative z-10 h-full p-8 lg:p-12 xl:p-16 flex flex-col justify-between">
+          <div className="flex justify-end">
+            <span className="text-xs font-mono uppercase tracking-widest text-slate-500 border border-slate-800 px-3 py-1 rounded-full bg-black/40 backdrop-blur-xs">
+              TEKNIK // V2.0
+            </span>
+          </div>
+
+          <div className="max-w-lg my-auto space-y-4">
+            <div className="size-14 rounded-2xl bg-white text-black flex items-center justify-center font-black tracking-tighter text-3xl shadow-2xl">
+              <span className="italic">//</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+              GLACE
+            </h2>
+            <p className="text-slate-300 text-sm sm:text-base font-normal leading-relaxed">
+              The Next-Gen Unified AI Engineering Workspace for Civil, Electrical, Mechanical & Infrastructure Intelligence.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-

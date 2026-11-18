@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sun, Moon, Bell, ChevronDown, Sparkles, LogOut, Clock, ArrowUpRight, Menu } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface HeaderProps {
   userEmail: string;
@@ -20,25 +21,25 @@ export const Header: React.FC<HeaderProps> = ({
   isTrial,
   trialText,
   onUpgradePlan,
-  onToggleMobileMenu
+  onToggleMobileMenu,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const { isDarkMode, toggleTheme } = useTheme();
 
   return (
-    <header className="h-16 bg-white dark:bg-[#10131d] border-b border-[#E2E7EF] dark:border-slate-800 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20 transition-colors duration-300">
-      <div className="flex items-center gap-3">
+    <header className="h-16 shrink-0 box-border bg-white dark:bg-[#090B10] border-b border-slate-200 dark:border-[#1a1f2c] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 transition-colors duration-300">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {/* Tombol Hamburger Mobile Drawer */}
         <button
           type="button"
           onClick={onToggleMobileMenu}
-          className="lg:hidden p-2 rounded-xl text-[#64748B] hover:text-[#172033] dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          className="lg:hidden p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#13161f] transition-colors cursor-pointer"
           title="Buka Navigasi"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[#64748B] dark:text-slate-300 border border-[#E2E7EF] dark:border-slate-700 transition-colors hidden sm:inline-block">
+        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#13161f] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1e2330] transition-colors hidden sm:inline-block">
           PT. Glace Kreasi Digital
         </span>
 

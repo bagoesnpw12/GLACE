@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { ArrowLeft, Upload, Download, FileText, Check, Clock } from 'lucide-react';
 import { DrawingItem } from '../../types/drawing';
 
@@ -117,9 +119,14 @@ export const ImportExportView: React.FC<ImportExportViewProps> = ({
   const recentImports = transfers.filter(t => t.type === 'import');
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6"
+    >
       {/* Header */}
-      <div>
+      <motion.div variants={staggerItem}>
         {onBack && (
           <button
             onClick={onBack}
@@ -134,19 +141,23 @@ export const ImportExportView: React.FC<ImportExportViewProps> = ({
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
           Pertukaran format berkas CAD DWG, DXF, PDF, dan citra teknik raster
         </p>
-      </div>
+      </motion.div>
 
       {feedbackMsg && (
-        <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold flex items-center gap-2">
+        <motion.div variants={staggerItem} className="p-3 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold flex items-center gap-2">
           <Check className="w-4 h-4" />
           <span>{feedbackMsg}</span>
-        </div>
+        </motion.div>
       )}
 
       {/* 2 Column Box Matching Screenshot 5 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <motion.div variants={staggerContainer} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left Side: Impor */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 shadow-xs space-y-6">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 shadow-xs space-y-6"
+        >
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             Impor
           </h2>
@@ -204,10 +215,14 @@ export const ImportExportView: React.FC<ImportExportViewProps> = ({
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Side: Ekspor */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 shadow-xs space-y-6">
+        <motion.div
+          variants={staggerItem}
+          whileHover={cardInteractiveHover.whileHover}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-6 shadow-xs space-y-6"
+        >
           <h2 className="text-base font-bold text-slate-900 dark:text-white">
             Ekspor
           </h2>
@@ -262,9 +277,9 @@ export const ImportExportView: React.FC<ImportExportViewProps> = ({
               {isExporting ? 'Memproses Ekspor...' : 'Ekspor'}
             </button>
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 

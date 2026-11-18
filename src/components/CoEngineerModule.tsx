@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { DrawingProject, DrawingItem, DrawingElement, DrawingLayer } from '../types/drawing';
 import { ActivityItem } from '../types';
 import { CoEngineerDashboardView, ChatMessage } from './drawings/CoEngineerDashboardView';
@@ -343,174 +344,184 @@ export const CoEngineerModule: React.FC<CoEngineerProps> = ({
   };
 
   /* =========================================================================
-     NAVIGASI ROUTING CO ENGINEER:
-     - '' atau 'Dashboard' -> Dashboard Co Engineer
-     - 'My Drawings'       -> Halaman Daftar Gambar (Gambar Saya)
-     - 'Drawing Projects'  -> Halaman Daftar Proyek (Proyek Menggambar)
-     - 'Drawing Workspace' -> Editor Menggambar (Ruang Kerja Menggambar)
-     - 'AI Drawing Assistant' -> Asisten Menggambar AI
+     RENDER KONTEN SUBMENU & HALAMAN UTAMA CO ENGINEER
      ========================================================================= */
+  const renderContent = () => {
+    // 1. Drawing Workspace View (Ruang Kerja Menggambar CAD)
+    if (selectedSubItem === 'Drawing Workspace' || activeDrawingId) {
+      const currentDrawing = drawings.find(d => d.id === activeDrawingId) || drawings[0] || {
+        id: 'draw_default',
+        project_id: 'proj_1',
+        title: 'Denah Lantai 1',
+        discipline: 'Sipil',
+        revision: 'Rev B',
+        status: 'Disetujui'
+      };
 
-  // 1. Drawing Workspace View (Ruang Kerja Menggambar CAD)
-  if (selectedSubItem === 'Drawing Workspace' || activeDrawingId) {
-    const currentDrawing = drawings.find(d => d.id === activeDrawingId) || drawings[0] || {
-      id: 'draw_default',
-      project_id: 'proj_1',
-      title: 'Denah Lantai 1',
-      discipline: 'Sipil',
-      revision: 'Rev B',
-      status: 'Disetujui'
-    };
+      return (
+        <DrawingWorkspaceView
+          drawing={currentDrawing}
+          onBack={() => {
+            setActiveDrawingId(null);
+            if (onSelectSubItem) {
+              onSelectSubItem(''); // Kembali ke Dashboard Co Engineer
+            }
+          }}
+          onSave={handleSaveDrawing}
+        />
+      );
+    }
+
+    // 2. Drawing Projects View (Proyek Menggambar)
+    if (selectedSubItem === 'Drawing Projects') {
+      return (
+        <DrawingProjectsView
+          projects={projects}
+          drawings={drawings}
+          onOpenDrawing={handleOpenDrawing}
+          onCreateProject={handleCreateProject}
+          isLoading={isLoading}
+        />
+      );
+    }
+
+    // 3. My Drawings View (Gambar Saya)
+    if (selectedSubItem === 'My Drawings') {
+      return (
+        <MyDrawingsView
+          drawings={drawings}
+          projects={projects}
+          onOpenDrawing={handleOpenDrawing}
+          onImportDrawing={handleImportDrawing}
+          onNewDrawing={handleNewDrawing}
+          isLoading={isLoading}
+        />
+      );
+    }
+
+    // 4. AI Drawing Assistant
+    if (selectedSubItem === 'AI Drawing Assistant') {
+      return (
+        <AIDrawingAssistantView
+          drawings={drawings}
+          onBack={() => onSelectSubItem && onSelectSubItem('')}
+          onOpenDrawing={handleOpenDrawing}
+        />
+      );
+    }
+
+    // 5. Drawing Comparison
+    if (selectedSubItem === 'Drawing Comparison') {
+      return (
+        <DrawingComparisonView
+          drawings={drawings}
+          onBack={() => onSelectSubItem && onSelectSubItem('')}
+          onOpenDrawing={handleOpenDrawing}
+        />
+      );
+    }
+
+    // 6. Engineering Intelligence
+    if (selectedSubItem === 'Engineering Intelligence') {
+      return (
+        <EngineeringIntelligenceView
+          drawings={drawings}
+          onBack={() => onSelectSubItem && onSelectSubItem('')}
+          onOpenDrawing={handleOpenDrawing}
+        />
+      );
+    }
+
+    // 7. Drawing Types
+    if (selectedSubItem === 'Drawing Types') {
+      return (
+        <DrawingTypesView
+          onBack={() => onSelectSubItem && onSelectSubItem('')}
+        />
+      );
+    }
+
+    // 8. Import & Export
+    if (selectedSubItem === 'Import & Export') {
+      return (
+        <ImportExportView
+          drawings={drawings}
+          onBack={() => onSelectSubItem && onSelectSubItem('')}
+          onImportSuccess={fetchData}
+        />
+      );
+    }
+
+    // 9. Drawing Control
+    if (selectedSubItem === 'Drawing Control') {
+      return (
+        <DrawingControlView
+          drawings={drawings}
+          onBack={() => onSelectSubItem && onSelectSubItem('')}
+          onOpenDrawing={handleOpenDrawing}
+        />
+      );
+    }
+
+    // 10. HALAMAN UTAMA DASHBOARD CO ENGINEER
+    if (isCanvasOpen) {
+      return (
+        <EngineeringCanvasModal
+          isOpen={isCanvasOpen}
+          onClose={() => setIsCanvasOpen(false)}
+          projectTitle={canvasProjectTitle}
+          messages={chatMessages}
+          onSendMessage={handleSendChatMessage}
+          canvasElements={canvasElements}
+          setCanvasElements={setCanvasElements}
+          isGeneratingImage={isGeneratingImage}
+        />
+      );
+    }
 
     return (
-      <DrawingWorkspaceView
-        drawing={currentDrawing}
-        onBack={() => {
-          setActiveDrawingId(null);
+      <CoEngineerDashboardView
+        drawings={drawings}
+        projects={projects}
+        activities={activities.filter(a => a.module === 'Co Engineer' || a.module === 'Document Intelligence')}
+        onNavigateSubItem={(subItem) => {
           if (onSelectSubItem) {
-            onSelectSubItem(''); // Kembali ke Dashboard Co Engineer
+            onSelectSubItem(subItem);
           }
         }}
-        onSave={handleSaveDrawing}
-      />
-    );
-  }
-
-  // 2. Drawing Projects View (Proyek Menggambar)
-  if (selectedSubItem === 'Drawing Projects') {
-    return (
-      <DrawingProjectsView
-        projects={projects}
-        drawings={drawings}
         onOpenDrawing={handleOpenDrawing}
-        onCreateProject={handleCreateProject}
+        onNewDrawingClick={() => {
+          if (onSelectSubItem) onSelectSubItem('My Drawings');
+        }}
+        onNewProjectClick={() => {
+          if (onSelectSubItem) onSelectSubItem('Drawing Projects');
+        }}
+        onImportClick={() => {
+          if (onSelectSubItem) onSelectSubItem('My Drawings');
+        }}
+        chatMessages={chatMessages}
+        onSendChatMessage={handleSendChatMessage}
+        onOpenCanvasExplicit={(title) => {
+          if (title) setCanvasProjectTitle(title);
+          setIsCanvasOpen(true);
+        }}
         isLoading={isLoading}
       />
     );
-  }
+  };
 
-  // 3. My Drawings View (Gambar Saya)
-  if (selectedSubItem === 'My Drawings') {
-    return (
-      <MyDrawingsView
-        drawings={drawings}
-        projects={projects}
-        onOpenDrawing={handleOpenDrawing}
-        onImportDrawing={handleImportDrawing}
-        onNewDrawing={handleNewDrawing}
-        isLoading={isLoading}
-      />
-    );
-  }
-
-  // 4. AI Drawing Assistant
-  if (selectedSubItem === 'AI Drawing Assistant') {
-    return (
-      <AIDrawingAssistantView
-        drawings={drawings}
-        onBack={() => onSelectSubItem && onSelectSubItem('')}
-        onOpenDrawing={handleOpenDrawing}
-      />
-    );
-  }
-
-  // 5. Drawing Comparison
-  if (selectedSubItem === 'Drawing Comparison') {
-    return (
-      <DrawingComparisonView
-        drawings={drawings}
-        onBack={() => onSelectSubItem && onSelectSubItem('')}
-        onOpenDrawing={handleOpenDrawing}
-      />
-    );
-  }
-
-  // 6. Engineering Intelligence
-  if (selectedSubItem === 'Engineering Intelligence') {
-    return (
-      <EngineeringIntelligenceView
-        drawings={drawings}
-        onBack={() => onSelectSubItem && onSelectSubItem('')}
-        onOpenDrawing={handleOpenDrawing}
-      />
-    );
-  }
-
-  // 7. Drawing Types
-  if (selectedSubItem === 'Drawing Types') {
-    return (
-      <DrawingTypesView
-        onBack={() => onSelectSubItem && onSelectSubItem('')}
-      />
-    );
-  }
-
-  // 8. Import & Export
-  if (selectedSubItem === 'Import & Export') {
-    return (
-      <ImportExportView
-        drawings={drawings}
-        onBack={() => onSelectSubItem && onSelectSubItem('')}
-        onImportSuccess={fetchData}
-      />
-    );
-  }
-
-  // 9. Drawing Control
-  if (selectedSubItem === 'Drawing Control') {
-    return (
-      <DrawingControlView
-        drawings={drawings}
-        onBack={() => onSelectSubItem && onSelectSubItem('')}
-        onOpenDrawing={handleOpenDrawing}
-      />
-    );
-  }
-
-  // 10. HALAMAN UTAMA DASHBOARD CO ENGINEER
-  // Jika pengguna secara eksplisit meminta kanvas dibuka, tampilkan kanvas modal / view dengan opsi "Tutup" untuk kembali
-  if (isCanvasOpen) {
-    return (
-      <EngineeringCanvasModal
-        isOpen={isCanvasOpen}
-        onClose={() => setIsCanvasOpen(false)}
-        projectTitle={canvasProjectTitle}
-        messages={chatMessages}
-        onSendMessage={handleSendChatMessage}
-        canvasElements={canvasElements}
-        setCanvasElements={setCanvasElements}
-        isGeneratingImage={isGeneratingImage}
-      />
-    );
-  }
+  const activeKey = isCanvasOpen 
+    ? 'canvas-modal' 
+    : (activeDrawingId ? `workspace-${activeDrawingId}` : (selectedSubItem || 'dashboard'));
 
   return (
-    <CoEngineerDashboardView
-      drawings={drawings}
-      projects={projects}
-      activities={activities.filter(a => a.module === 'Co Engineer' || a.module === 'Document Intelligence')}
-      onNavigateSubItem={(subItem) => {
-        if (onSelectSubItem) {
-          onSelectSubItem(subItem);
-        }
-      }}
-      onOpenDrawing={handleOpenDrawing}
-      onNewDrawingClick={() => {
-        if (onSelectSubItem) onSelectSubItem('My Drawings');
-      }}
-      onNewProjectClick={() => {
-        if (onSelectSubItem) onSelectSubItem('Drawing Projects');
-      }}
-      onImportClick={() => {
-        if (onSelectSubItem) onSelectSubItem('My Drawings');
-      }}
-      chatMessages={chatMessages}
-      onSendChatMessage={handleSendChatMessage}
-      onOpenCanvasExplicit={(title) => {
-        if (title) setCanvasProjectTitle(title);
-        setIsCanvasOpen(true);
-      }}
-      isLoading={isLoading}
-    />
+    <AnimatePresence mode="wait">
+      <div
+        key={activeKey}
+        className="w-full"
+      >
+        {renderContent()}
+      </div>
+    </AnimatePresence>
   );
 };

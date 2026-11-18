@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
+import { staggerContainer, staggerItem } from '../../utils/motionVariants';
 import { ArrowLeft, Sparkles, Send, FileText } from 'lucide-react';
 import { DrawingItem } from '../../types/drawing';
 
@@ -84,9 +86,14 @@ export const AIDrawingAssistantView: React.FC<AIDrawingAssistantViewProps> = ({
   };
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6">
+    <motion.div
+      variants={staggerContainer}
+      initial="hidden"
+      animate="show"
+      className="w-full max-w-[1400px] mx-auto p-6 md:p-8 space-y-6"
+    >
       {/* Header */}
-      <div>
+      <motion.div variants={staggerItem}>
         {onBack && (
           <button
             onClick={onBack}
@@ -114,10 +121,13 @@ export const AIDrawingAssistantView: React.FC<AIDrawingAssistantViewProps> = ({
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Container Matching Screenshot 1 */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <motion.div
+        variants={staggerItem}
+        className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+      >
         {/* Left Side: Technical Drawing Preview Canvas with 4 Bolt Holes */}
         <div className="lg:col-span-6 bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[480px]">
           <div className="relative w-full max-w-[380px] aspect-[3/4] bg-white dark:bg-slate-900 rounded-xl border border-blue-200 dark:border-blue-900/60 shadow-md p-6 flex flex-col justify-between">
@@ -232,8 +242,8 @@ export const AIDrawingAssistantView: React.FC<AIDrawingAssistantViewProps> = ({
             </form>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
