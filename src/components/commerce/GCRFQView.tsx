@@ -6,15 +6,12 @@ import {
   CheckCircle2, 
   ArrowUpRight, 
   Search, 
-  FileText, 
   MoreVertical, 
   Plus, 
   X, 
-  Check, 
-  ChevronRight,
-  Filter,
-  Eye,
-  Trash2
+  Eye, 
+  Trash2,
+  FileText
 } from 'lucide-react';
 import { RFQItem } from '../../data/commerceData';
 
@@ -35,7 +32,6 @@ export const GCRFQView: React.FC<GCRFQViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRFQ, setSelectedRFQ] = useState<RFQItem | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null);
 
   // New RFQ form state
@@ -43,12 +39,6 @@ export const GCRFQView: React.FC<GCRFQViewProps> = ({
   const [formItemsCount, setFormItemsCount] = useState(1);
   const [formSupplier, setFormSupplier] = useState('');
   const [formEstTotal, setFormEstTotal] = useState('');
-
-  // Counts based on rfqList
-  const totalCount = rfqList.length;
-  const menungguCount = rfqList.filter(item => item.status === 'Menunggu').length;
-  const diprosesCount = rfqList.filter(item => item.status === 'Diproses').length;
-  const selesaiCount = rfqList.filter(item => item.status === 'Selesai').length;
 
   const filteredItems = rfqList.filter(item => {
     const matchesTab = activeTab === 'Semua' ? true : item.status === activeTab;
@@ -80,528 +70,318 @@ export const GCRFQView: React.FC<GCRFQViewProps> = ({
     setShowCreateModal(false);
   };
 
-  const getStatusBadge = (status: RFQItem['status']) => {
-    switch (status) {
-      case 'Diproses':
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200">
-            Diproses
-          </span>
-        );
-      case 'Menunggu':
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-600 border border-amber-200">
-            Menunggu
-          </span>
-        );
-      case 'Selesai':
-        return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Selesai
-          </span>
-        );
-      case 'Draft':
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-            Draft
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="space-y-6">
-      {/* Top Header & Template Link */}
+      {/* 1. Header Bar: Title & Lihat Template Referensi button (Persis Referensi 3 Kiri) */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">RFQ</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Kelola permintaan penawaran harga pengadaan komponen & material teknik</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
+            RFQ
+          </h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setShowTemplateModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all"
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => alert('Membuka Template Referensi Dokumen RFQ (.PDF & .XLSX)')}
+            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-2xs"
           >
-            <FileText className="w-4 h-4 text-gray-500" />
-            <span>Lihat Template Referensi</span>
+            Lihat Template Referensi
           </button>
 
-          <button 
+          <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            <span>Buat RFQ Baru</span>
+            <Plus className="w-3.5 h-3.5" />
+            <span>+ Buat RFQ</span>
           </button>
         </div>
       </div>
 
-      {/* 4 KPI Cards persis sesuai Screenshot 2 Kanan */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. Top 4 Metric KPI Cards (Persis Referensi 3 Kiri) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* KPI 1: RFQ Aktif */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-gray-500">RFQ Aktif</p>
-            <h3 className="text-2xl font-bold text-gray-900 mt-1">{totalCount || 24}</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">RFQ Aktif</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">24</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
+          <div className="text-slate-400 dark:text-zinc-500">
             <Users className="w-5 h-5" />
           </div>
         </div>
 
         {/* KPI 2: Menunggu Penawaran */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-gray-500">Menunggu Penawaran</p>
-            <h3 className="text-2xl font-bold text-gray-900 mt-1">{menungguCount || 7}</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">Menunggu Penawaran</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">7</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
+          <div className="text-slate-400 dark:text-zinc-500">
             <Clock className="w-5 h-5" />
           </div>
         </div>
 
         {/* KPI 3: Penawaran Masuk */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-gray-500">Penawaran Masuk</p>
-            <h3 className="text-2xl font-bold text-gray-900 mt-1">{diprosesCount || 15}</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">Penawaran Masuk</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">15</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
-            <CheckCircle2 className="w-5 h-5" />
+          <div className="text-slate-400 dark:text-zinc-500">
+            <Inbox className="w-5 h-5" />
           </div>
         </div>
 
         {/* KPI 4: Selesai */}
-        <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-gray-500">Selesai</p>
-            <h3 className="text-2xl font-bold text-gray-900 mt-1">{selesaiCount || 182}</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">Selesai</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">182</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
+          <div className="text-slate-400 dark:text-zinc-500">
             <ArrowUpRight className="w-5 h-5" />
           </div>
         </div>
       </div>
 
-      {/* Main Table Card */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Header & Filter Controls */}
-        <div className="p-5 border-b border-gray-100 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-base font-bold text-gray-900">Daftar RFQ</h2>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-medium">
-                {filteredItems.length} Terverifikasi
-              </span>
-            </div>
+      {/* 3. Section Title & Filter Tabs (Persis Referensi 3 Kiri) */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
+            Daftar RFQ
+          </h2>
+          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-[10px] font-semibold text-slate-600 dark:text-zinc-300">
+            5 Menampilkan
+          </span>
+        </div>
 
-            {/* Search Input */}
-            <div className="relative min-w-[240px]">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input 
-                type="text" 
-                placeholder="Cari nomor atau nama RFQ..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50/70 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-400 dark:text-zinc-500">Filter:</span>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-zinc-800/60 p-1 rounded-lg border border-slate-200 dark:border-zinc-800">
+              {(['Semua', 'Menunggu', 'Diproses', 'Selesai', 'Draft'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-3 py-1 rounded text-xs font-medium transition-colors cursor-pointer ${
+                    activeTab === tab
+                      ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-zinc-100 shadow-2xs font-semibold'
+                      : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
+                  }`}
                 >
-                  <X className="w-3.5 h-3.5" />
+                  {tab}
                 </button>
-              )}
+              ))}
             </div>
           </div>
 
-          {/* Filter Tabs: Semua, Menunggu, Diproses, Selesai, Draft */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
-            <span className="text-xs font-semibold text-gray-400 mr-2 flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5" />
-              Filter:
-            </span>
-            {(['Semua', 'Menunggu', 'Diproses', 'Selesai', 'Draft'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  activeTab === tab
-                    ? 'bg-blue-600 text-white shadow-sm font-semibold'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Table View matching Screenshot 2 Right */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
-                <th className="py-3 px-6">NOMOR</th>
-                <th className="py-3 px-6">NAMA RFQ</th>
-                <th className="py-3 px-6 text-center">JUMLAH ITEM</th>
-                <th className="py-3 px-6 text-center">STATUS</th>
-                <th className="py-3 px-6">TANGGAL</th>
-                <th className="py-3 px-6 text-center">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 text-xs">
-              {filteredItems.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-400">
-                    Tidak ada dokumen RFQ yang sesuai dengan pencarian atau filter.
-                  </td>
-                </tr>
-              ) : (
-                filteredItems.map((item) => (
-                  <tr 
-                    key={item.id}
-                    className="hover:bg-blue-50/30 transition-colors group"
-                  >
-                    <td className="py-4 px-6 font-semibold text-gray-900 whitespace-nowrap">
-                      {item.rfqNumber}
-                    </td>
-                    <td className="py-4 px-6 font-medium text-gray-800">
-                      <div>
-                        <span>{item.title}</span>
-                        {item.supplier && (
-                          <div className="text-[11px] text-gray-400 mt-0.5 font-normal">
-                            Target Vendor: {item.supplier}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-center font-medium text-gray-700 whitespace-nowrap">
-                      {item.itemsCount}
-                    </td>
-                    <td className="py-4 px-6 text-center whitespace-nowrap">
-                      {getStatusBadge(item.status)}
-                    </td>
-                    <td className="py-4 px-6 text-gray-500 whitespace-nowrap">
-                      {item.date}
-                    </td>
-                    <td className="py-4 px-6 text-center whitespace-nowrap relative">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => setSelectedRFQ(item)}
-                          title="Lihat Detail"
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <div className="relative">
-                          <button
-                            onClick={() => setActiveActionMenuId(activeActionMenuId === item.id ? null : item.id)}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-
-                          {/* Dropdown Menu */}
-                          {activeActionMenuId === item.id && (
-                            <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-30 text-left">
-                              <button
-                                onClick={() => {
-                                  setSelectedRFQ(item);
-                                  setActiveActionMenuId(null);
-                                }}
-                                className="w-full px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                              >
-                                <Eye className="w-3.5 h-3.5 text-gray-400" />
-                                Lihat Detail
-                              </button>
-                              {onUpdateRFQStatus && item.status !== 'Selesai' && (
-                                <button
-                                  onClick={() => {
-                                    onUpdateRFQStatus(item.id, 'Selesai');
-                                    setActiveActionMenuId(null);
-                                  }}
-                                  className="w-full px-3 py-1.5 text-xs text-emerald-600 hover:bg-emerald-50 flex items-center gap-2"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  Tandai Selesai
-                                </button>
-                              )}
-                              {onDeleteRFQ && (
-                                <button
-                                  onClick={() => {
-                                    onDeleteRFQ(item.id);
-                                    setActiveActionMenuId(null);
-                                  }}
-                                  className="w-full px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 flex items-center gap-2 border-t border-gray-50 mt-1"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  Hapus RFQ
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer info */}
-        <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-2">
-          <span>Menampilkan {filteredItems.length} dari {rfqList.length} total dokumen RFQ</span>
-          <div className="flex items-center gap-1 text-[11px] text-gray-400">
-            <span>Siklus tender IEC standard: 14 hari kerja</span>
+          <div className="relative w-full sm:w-60">
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nomor atau judul RFQ..."
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
           </div>
         </div>
       </div>
 
-      {/* RFQ Detail Modal */}
-      {selectedRFQ && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 relative">
-            <button
-              onClick={() => setSelectedRFQ(null)}
-              className="absolute top-4 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+      {/* 4. Table RFQ (Clean Standard Monokrom Persis Referensi 3 Kiri) */}
+      <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] overflow-hidden shadow-2xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-zinc-800 text-[11px] font-semibold text-slate-500 dark:text-zinc-400 bg-slate-50/70 dark:bg-[#090a0d]">
+                <th className="py-3 px-5">Nomor</th>
+                <th className="py-3 px-4">Nama RFQ</th>
+                <th className="py-3 px-4 text-center">Jumlah Item</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Tanggal</th>
+                <th className="py-3 px-5 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/80">
+              {filteredItems.map((item) => (
+                <tr key={item.id} className="hover:bg-slate-50/60 dark:hover:bg-zinc-800/30 transition-colors">
+                  <td className="py-3.5 px-5 font-mono font-semibold text-slate-900 dark:text-zinc-100">
+                    {item.rfqNumber}
+                  </td>
+                  <td className="py-3.5 px-4 font-medium text-slate-800 dark:text-zinc-200 max-w-xs truncate">
+                    {item.title}
+                  </td>
+                  <td className="py-3.5 px-4 text-center font-mono text-slate-600 dark:text-zinc-400">
+                    {item.itemsCount}
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300">
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        item.status === 'Selesai' ? 'bg-emerald-500 dark:bg-emerald-400' :
+                        item.status === 'Diproses' ? 'bg-blue-500' :
+                        item.status === 'Menunggu' ? 'bg-amber-400' : 'bg-slate-400'
+                      }`} />
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-500 dark:text-zinc-400 whitespace-nowrap">
+                    {item.date}
+                  </td>
+                  <td className="py-3.5 px-5 text-right relative">
+                    <button
+                      onClick={() => setActiveActionMenuId(activeActionMenuId === item.id ? null : item.id)}
+                      className="p-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 cursor-pointer"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm">
-                RFQ
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-gray-900">{selectedRFQ.rfqNumber}</h3>
-                <p className="text-xs text-gray-500">Dibuat pada {selectedRFQ.date}</p>
-              </div>
-            </div>
-
-            <div className="space-y-4 py-2 border-y border-gray-100 my-4 text-xs">
-              <div>
-                <span className="text-gray-400 font-medium">Nama Permintaan (Title):</span>
-                <p className="text-sm font-semibold text-gray-800 mt-0.5">{selectedRFQ.title}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-gray-400 font-medium">Jumlah Item:</span>
-                  <p className="text-sm font-semibold text-gray-800 mt-0.5">{selectedRFQ.itemsCount} Unit/SKU</p>
-                </div>
-                <div>
-                  <span className="text-gray-400 font-medium">Status Dokumen:</span>
-                  <div className="mt-1">{getStatusBadge(selectedRFQ.status)}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-gray-400 font-medium">Target Rekanan Supplier:</span>
-                  <p className="text-xs font-semibold text-gray-800 mt-0.5">
-                    {selectedRFQ.supplier || 'Terbuka Untuk Semua Mitra Terdaftar'}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-gray-400 font-medium">Estimasi Budget:</span>
-                  <p className="text-xs font-semibold text-blue-600 mt-0.5">
-                    {selectedRFQ.totalEstimated || 'Rp 14.250.000'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setSelectedRFQ(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                Tutup
-              </button>
-              {onUpdateRFQStatus && selectedRFQ.status !== 'Selesai' && (
-                <button
-                  onClick={() => {
-                    onUpdateRFQStatus(selectedRFQ.id, 'Selesai');
-                    setSelectedRFQ(null);
-                  }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors flex items-center gap-1.5"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  Setujui & Selesaikan
-                </button>
-              )}
-            </div>
-          </div>
+                    {activeActionMenuId === item.id && (
+                      <div className="absolute right-5 mt-1 w-36 bg-white dark:bg-[#181a20] rounded-lg shadow-lg border border-slate-200 dark:border-zinc-700 py-1 z-30 text-xs">
+                        <button
+                          onClick={() => {
+                            setSelectedRFQ(item);
+                            setActiveActionMenuId(null);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 flex items-center gap-2"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Lihat Detail</span>
+                        </button>
+                        {onDeleteRFQ && (
+                          <button
+                            onClick={() => {
+                              onDeleteRFQ(item.id);
+                              setActiveActionMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Hapus</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
-      {/* Create RFQ Modal */}
+      {/* Modal Buat RFQ Baru */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100 relative">
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <form 
+            onSubmit={handleCreateSubmit}
+            className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200 dark:border-zinc-800 max-w-md w-full p-6 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">Buat Permintaan Penawaran (RFQ)</h3>
+              <button 
+                type="button" 
+                onClick={() => setShowCreateModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-            <h3 className="text-base font-bold text-gray-900 mb-1">Buat Dokumen RFQ Baru</h3>
-            <p className="text-xs text-gray-500 mb-4">Lengkapi spesifikasi kebutuhan material industri untuk diterbitkan ke rekanan</p>
-
-            <form onSubmit={handleCreateSubmit} className="space-y-3.5 text-xs">
+            <div className="space-y-3 text-xs">
               <div>
-                <label className="block font-medium text-gray-700 mb-1">Judul / Nama Kebutuhan Pengadaan</label>
-                <input 
-                  type="text" 
-                  placeholder="Contoh: Kabel Serat Optik Multimode Core Industri"
+                <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Judul RFQ</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Pengadaan Baja Ringan & Struktur Trus CNP 125"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  required
-                  className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-[#181a20] border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-medium text-gray-700 mb-1">Jumlah Item / Unit</label>
-                  <input 
-                    type="number" 
+                  <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Jumlah Item</label>
+                  <input
+                    type="number"
                     min="1"
                     value={formItemsCount}
                     onChange={(e) => setFormItemsCount(Number(e.target.value))}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#181a20] border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block font-medium text-gray-700 mb-1">Estimasi Budget</label>
-                  <input 
-                    type="text" 
+                  <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1">Estimasi Nilai</label>
+                  <input
+                    type="text"
                     placeholder="Rp 14.250.000"
                     value={formEstTotal}
                     onChange={(e) => setFormEstTotal(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-[#181a20] border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block font-medium text-gray-700 mb-1">Pilihan Rekanan Supplier (Opsional)</label>
-                <input 
-                  type="text" 
-                  placeholder="Contoh: PT Mega Baja Presisi"
-                  value={formSupplier}
-                  onChange={(e) => setFormSupplier(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors flex items-center gap-1.5"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Terbitkan RFQ
-                </button>
-              </div>
-            </form>
-          </div>
+            <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-white rounded-lg text-xs font-semibold transition-colors"
+              >
+                Terbitkan RFQ
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
-      {/* Template Modal */}
-      {showTemplateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-gray-100 relative">
-            <button
-              onClick={() => setShowTemplateModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h3 className="text-base font-bold text-gray-900 mb-1 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-blue-600" />
-              Template Referensi Dokumen RFQ
-            </h3>
-            <p className="text-xs text-gray-500 mb-4">Gunakan format standar Glace Commerce untuk percepatan respon tender</p>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-800">Template Tender Elektrikal (SPLN / IEC)</h4>
-                  <p className="text-[11px] text-gray-500">Standar trafo distribusi, breaker panel & kabel tegangan menengah</p>
-                </div>
-                <button 
-                  onClick={() => {
-                    setFormTitle('Pengadaan Peralatan Switchgear 20kV SPLN D3');
-                    setFormItemsCount(8);
-                    setShowTemplateModal(false);
-                    setShowCreateModal(true);
-                  }}
-                  className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-blue-600 font-semibold hover:bg-blue-50 text-[11px]"
-                >
-                  Gunakan
-                </button>
+      {/* Modal Detail RFQ */}
+      {selectedRFQ && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200 dark:border-zinc-800 max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+              <div>
+                <span className="text-[10px] font-mono text-slate-400 dark:text-zinc-500">{selectedRFQ.rfqNumber}</span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">{selectedRFQ.title}</h3>
               </div>
+              <button 
+                type="button" 
+                onClick={() => setSelectedRFQ(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-800">Template Mekanikal & Struktur Baja</h4>
-                  <p className="text-[11px] text-gray-500">Standar CNP, pipa seamless ASTM A106, katup gate valve 150#</p>
-                </div>
-                <button 
-                  onClick={() => {
-                    setFormTitle('Pengadaan Baja Ringan & Struktur Trus CNP 125');
-                    setFormItemsCount(12);
-                    setShowTemplateModal(false);
-                    setShowCreateModal(true);
-                  }}
-                  className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-blue-600 font-semibold hover:bg-blue-50 text-[11px]"
-                >
-                  Gunakan
-                </button>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between py-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-slate-500 dark:text-zinc-400">Status:</span>
+                <span className="font-semibold text-slate-900 dark:text-zinc-100">{selectedRFQ.status}</span>
               </div>
-
-              <div className="p-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-800">Template Otomasi & Instrumen Sensor</h4>
-                  <p className="text-[11px] text-gray-500">Standar PLC Siemens S7-1200, linear carriage guide & sensor PT100</p>
-                </div>
-                <button 
-                  onClick={() => {
-                    setFormTitle('Peralatan Sensor Suhu & Kalibrasi Laboratorium');
-                    setFormItemsCount(6);
-                    setShowTemplateModal(false);
-                    setShowCreateModal(true);
-                  }}
-                  className="px-3 py-1 bg-white border border-gray-200 rounded-lg text-blue-600 font-semibold hover:bg-blue-50 text-[11px]"
-                >
-                  Gunakan
-                </button>
+              <div className="flex justify-between py-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-slate-500 dark:text-zinc-400">Jumlah Item:</span>
+                <span className="text-slate-900 dark:text-zinc-100">{selectedRFQ.itemsCount} Unit</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-slate-500 dark:text-zinc-400">Tanggal:</span>
+                <span className="text-slate-900 dark:text-zinc-100">{selectedRFQ.date}</span>
               </div>
             </div>
 
-            <div className="mt-5 flex justify-end">
+            <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
               <button
-                onClick={() => setShowTemplateModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                type="button"
+                onClick={() => setSelectedRFQ(null)}
+                className="px-4 py-1.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg text-xs font-semibold hover:bg-slate-200 dark:hover:bg-zinc-700"
               >
                 Tutup
               </button>

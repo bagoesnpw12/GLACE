@@ -1,19 +1,6 @@
 import React, { useState } from 'react';
 import { EngineeringDocument } from '../../data/documentIntelligenceData';
-import { 
-  Search, 
-  Sparkles, 
-  FileText, 
-  ArrowRight,
-  Filter,
-  CheckCircle2,
-  ExternalLink,
-  Tag,
-  BookOpen,
-  Eye,
-  SlidersHorizontal,
-  Bot
-} from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface DIAISearchViewProps {
   documents: EngineeringDocument[];
@@ -25,226 +12,112 @@ export const DIAISearchView: React.FC<DIAISearchViewProps> = ({
   onPreviewDocument
 }) => {
   const [query, setQuery] = useState('');
-  const [filterFormat, setFilterFormat] = useState('Semua');
-  const [minScore, setMinScore] = useState<number>(70);
+  const [selectedTag, setSelectedTag] = useState<string>('Cari');
 
   const sampleChips = [
-    { label: 'Sistem Pendingin Chiller', text: 'chiller refrigerasi HVAC' },
-    { label: 'Gardu Induk 150 kV', text: 'gardu induk 150 kV trafo' },
-    { label: 'Proteksi Relai & Arc-Flash', text: 'Berapa kapasitas beban trafo dan regulasi arc-flash?' }
+    { label: '[Contoh pertanyaan]', text: 'spesifikasi trafo daya 60 MVA' },
+    { label: '[Contoh pertanyaan]', text: 'kalkulasi beban chiller HVAC' },
+    { label: '[Contoh pertanyaan]', text: 'SOP pengujian arc-flash' }
   ];
 
-  // Enhanced search results with computed similarity score, highlight snippets, and source sections
-  const results = documents
-    .map(d => {
-      let score = 92;
-      let matchedSnippet = d.content_text || 'Dokumen spesifikasi teknis mencakup ketentuan desain, toleransi fabrikasi, dan pengujian lapangan.';
-
-      if (query.trim()) {
-        const q = query.toLowerCase();
-        const terms = q.split(' ').filter(Boolean);
-        let hits = 0;
-        
-        terms.forEach(term => {
-          if (d.title.toLowerCase().includes(term)) hits += 3;
-          if (d.category.toLowerCase().includes(term)) hits += 2;
-          if (d.discipline.toLowerCase().includes(term)) hits += 2;
-          if (d.content_text && d.content_text.toLowerCase().includes(term)) hits += 2;
-        });
-
-        score = Math.min(99, 68 + hits * 7);
-      }
-
-      return {
-        ...d,
-        relevanceScore: score,
-        snippet: matchedSnippet,
-        sourceSection: d.category === 'Electrical SLD' ? 'Bab 3.4 Skema Single Line' : d.category === 'Technical Specification' ? 'Klausul 5.1 Spesifikasi Material' : 'Seksi 2.0 Gambar Teknis'
-      };
-    })
-    .filter(d => {
-      const matchFormat = filterFormat === 'Semua' ? true : d.doc_type === filterFormat;
-      if (!query.trim()) return matchFormat;
-
-      const q = query.toLowerCase();
-      const matchText =
-        d.title.toLowerCase().includes(q) ||
-        d.category.toLowerCase().includes(q) ||
-        d.discipline.toLowerCase().includes(q) ||
-        (d.content_text && d.content_text.toLowerCase().includes(q));
-
-      return matchText && matchFormat;
-    })
-    .sort((a, b) => b.relevanceScore - a.relevanceScore);
+  const results = documents.filter(d => {
+    if (!query.trim()) return true;
+    const q = query.toLowerCase();
+    return (
+      d.title.toLowerCase().includes(q) ||
+      d.category.toLowerCase().includes(q) ||
+      d.discipline.toLowerCase().includes(q) ||
+      (d.content_text && d.content_text.toLowerCase().includes(q))
+    );
+  });
 
   return (
-    <div className="space-y-6">
-      {/* Header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            AI Search
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Pencarian semantik berteknologi Natural Language Processing (NLP) untuk menemukan klausul teknik, toleransi desain, dan standar proyek secara akurat.
-          </p>
-        </div>
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* 1. Header Sesuai Referensi 2 Kanan */}
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          AI Search
+        </h1>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          Pencarian semantik dan ekstraksi cerdas berbasis Large Language Model.
+        </p>
       </div>
 
-      {/* Hero Intelligent Search Bar Container */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
-        <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 text-slate-400 pointer-events-none">
-            <Search className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          </div>
+      {/* 2. Search Bar dan Chips Cepat Sesuai Referensi 2 Kanan */}
+      <div className="space-y-3">
+        <div className="relative flex items-center">
+          <Search className="w-4 h-4 absolute left-3.5 text-zinc-400" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Tanyakan atau cari: misal 'spesifikasi trafo 60 MVA', 'standar baku mutu IPAL', atau 'kapasitas chiller'..."
-            className="w-full pl-11 pr-28 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            placeholder="Search holdings or tickers..."
+            className="w-full pl-10 pr-28 py-2 text-xs rounded-xl border border-zinc-200 dark:border-[#27272a] bg-white dark:bg-[#121316] text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:border-zinc-400 dark:focus:border-zinc-600 transition-colors"
           />
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            <button
-              onClick={() => {}}
-              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer flex items-center gap-1"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Cari AI</span>
-            </button>
+          <div className="absolute right-2 flex items-center gap-1.5 text-[11px]">
+            {['Cari', 'ETFs', 'REITs'].map((tag) => (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => setSelectedTag(tag)}
+                className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                  selectedTag === tag 
+                    ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100' 
+                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Format Filter Chips & Quick Suggestions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800/60">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-semibold text-slate-400">Filter Tipe:</span>
-            {['Semua', 'PDF', 'DWG', 'DOCX'].map(fmt => (
-              <button
-                key={fmt}
-                onClick={() => setFilterFormat(fmt)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  filterFormat === fmt
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-2xs'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
-                }`}
-              >
-                {fmt === 'Semua' ? 'Semua Format' : fmt}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-slate-400">Saran:</span>
-            {sampleChips.map((chip, idx) => (
-              <button
-                key={idx}
-                onClick={() => setQuery(chip.text)}
-                className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-[11px] text-slate-600 dark:text-slate-300 font-medium hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 transition-colors cursor-pointer"
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
+        {/* Chips Contoh Pertanyaan Sesuai Referensi 2 */}
+        <div className="flex flex-wrap items-center gap-2">
+          {sampleChips.map((chip, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setQuery(chip.text)}
+              className="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-[#27272a] bg-white dark:bg-[#121316] text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 text-[11px] font-medium transition-colors cursor-pointer"
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Search Results Summary & Cards */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-              Hasil Pencarian AI
-            </h2>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-              Ditemukan {results.length} berkas yang relevan dengan kueri semantik
-            </p>
-          </div>
-          <div className="text-xs text-slate-500 font-medium">
-            Diurutkan berdasarkan <strong>Tingkat Relevansi AI</strong>
-          </div>
-        </div>
+      {/* 3. Container Hasil Pencarian Berulang Sesuai Referensi 2 Kanan */}
+      <div className="rounded-xl border border-zinc-200/90 dark:border-[#23252c] bg-white dark:bg-[#121316] p-5">
+        <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-4">
+          Hasil Pencarian
+        </h2>
 
-        {results.length === 0 ? (
-          <div className="p-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-center space-y-2">
-            <Bot className="w-10 h-10 text-slate-300 mx-auto" />
-            <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">
-              Tidak Ada Dokumen yang Cocok
-            </h3>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Coba gunakan kata kunci umum seperti "trafo", "chiller", "IPAL", atau kosongkan kotak pencarian.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {results.map((item, idx) => (
+        <div className="space-y-4">
+          {results.length === 0 ? (
+            <div className="py-12 text-center text-xs text-zinc-400">
+              Tidak ditemukan dokumen yang cocok dengan kata kunci pencarian.
+            </div>
+          ) : (
+            results.slice(0, 4).map((doc, idx) => (
               <div
-                key={item.id}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm transition-all flex flex-col md:flex-row md:items-start justify-between gap-4 group"
+                key={doc.id || idx}
+                onClick={() => onPreviewDocument(doc)}
+                className="p-4 rounded-xl border border-zinc-100 dark:border-[#23252c] bg-zinc-50/50 dark:bg-[#18191f]/60 hover:bg-zinc-100/60 dark:hover:bg-[#1c1d25] transition-colors cursor-pointer space-y-1.5"
               >
-                <div className="space-y-2.5 flex-1">
-                  {/* Metadata Chips Bar */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50">
-                      {item.doc_type}
-                    </span>
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
-                      {item.discipline}
-                    </span>
-                    <span className="text-slate-300 dark:text-slate-700">•</span>
-                    <span className="text-xs text-slate-500 font-mono">
-                      {item.revision}
-                    </span>
-                    <span className="text-slate-300 dark:text-slate-700">•</span>
-                    <span className="text-[11px] text-slate-400">
-                      Sumber: <strong className="text-slate-600 dark:text-slate-300">{item.sourceSection}</strong>
-                    </span>
-                  </div>
-
-                  {/* Document Title */}
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {item.title}
-                  </h3>
-
-                  {/* Highlighted AI Snippet */}
-                  <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    <p className="line-clamp-2">
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">Kutipan Klausul: </span>
-                      "{item.snippet}"
-                    </p>
-                  </div>
-
-                  {/* Author and Date */}
-                  <div className="flex items-center gap-4 text-[11px] text-slate-400">
-                    <span>Penulis: <strong className="text-slate-600 dark:text-slate-300">{item.author}</strong></span>
-                    <span>Diperbarui: {item.updated_at}</span>
-                    <span>Ukuran: {item.file_size}</span>
-                  </div>
-                </div>
-
-                {/* Right Relevancy Box & Action */}
-                <div className="flex md:flex-col items-center md:items-end justify-between gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 dark:border-slate-800">
-                  <div className="text-right">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                      Relevansi AI
-                    </div>
-                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                      {item.relevanceScore}%
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => onPreviewDocument(item)}
-                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-blue-600 hover:text-white dark:bg-slate-800 dark:hover:bg-blue-600 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Lihat Klausul</span>
-                  </button>
-                </div>
+                <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
+                  [{doc.title}]
+                </h3>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  (Kutipan teks hasil pencarian: {doc.content_text ? doc.content_text.slice(0, 160) : 'Klausul spesifikasi teknis dan standar uji kelayakan rekayasa sistem terverifikasi.'}...)
+                </p>
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                  (Sumber: {doc.doc_type || 'Spesifikasi Teknis'}, Hal. {idx + 4})
+                </p>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

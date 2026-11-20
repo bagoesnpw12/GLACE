@@ -43,13 +43,27 @@ export const CoEngineerModule: React.FC<CoEngineerProps> = ({
   // AI Assistant Chat State (Persisten di tingkat Module agar tidak hilang)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
+  // Helper function to build authenticated headers
+  const getAuthHeaders = (extraHeaders: Record<string, string> = {}) => {
+    const token = localStorage.getItem('glace_jwt_token');
+    const headers: Record<string, string> = { ...extraHeaders };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
+  };
+
   // Fetch Projects & Drawings from MySQL Backend
   const fetchData = async () => {
     try {
       setIsLoading(true);
       const [projRes, drawRes] = await Promise.all([
-        fetch('http://localhost:3001/api/drawings/projects'),
-        fetch('http://localhost:3001/api/drawings')
+        fetch('http://localhost:3001/api/drawings/projects', {
+          headers: getAuthHeaders()
+        }),
+        fetch('http://localhost:3001/api/drawings', {
+          headers: getAuthHeaders()
+        })
       ]);
 
       if (projRes.ok) {
@@ -146,7 +160,7 @@ export const CoEngineerModule: React.FC<CoEngineerProps> = ({
       try {
         const res = await fetch('http://localhost:3001/api/coengineer/generate-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             prompt: userText,
             width: 800,
@@ -251,7 +265,7 @@ export const CoEngineerModule: React.FC<CoEngineerProps> = ({
       const email = localStorage.getItem('glace_user_email') || 'all';
       const res = await fetch('http://localhost:3001/api/drawings/projects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           ...projectData,
           email
@@ -273,7 +287,7 @@ export const CoEngineerModule: React.FC<CoEngineerProps> = ({
       const email = localStorage.getItem('glace_user_email') || 'all';
       const res = await fetch('http://localhost:3001/api/drawings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           ...drawingData,
           email
@@ -299,7 +313,7 @@ export const CoEngineerModule: React.FC<CoEngineerProps> = ({
       
       const res = await fetch('http://localhost:3001/api/drawings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           project_id: projectId,
           email,
@@ -326,7 +340,7 @@ export const CoEngineerModule: React.FC<CoEngineerProps> = ({
     try {
       const res = await fetch(`http://localhost:3001/api/drawings/${activeDrawingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           elements_json: JSON.stringify(elements),
           layers_json: JSON.stringify(layers)

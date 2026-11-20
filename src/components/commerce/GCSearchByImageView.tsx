@@ -3,12 +3,9 @@ import {
   Upload, 
   Search, 
   Eye, 
-  CheckCircle2, 
-  Sparkles, 
   Layers, 
   Plus, 
-  FileImage,
-  Send,
+  CheckCircle2,
   X
 } from 'lucide-react';
 
@@ -22,7 +19,7 @@ export const GCSearchByImageView: React.FC<GCSearchByImageViewProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState('linear_guide_sample.jpg');
 
-  // Produk mirip persis sesuai Screenshot 2 Kiri:
+  // Produk mirip persis sesuai Referensi 2 Kanan:
   // 3 Kartu Linear Guide Carriage Block BGH25CA Heavy Duty (MISUMI CORP • 98.6% cocok)
   const similarProducts = [
     {
@@ -58,159 +55,150 @@ export const GCSearchByImageView: React.FC<GCSearchByImageViewProps> = ({
     setIsSearching(true);
     setTimeout(() => {
       setIsSearching(false);
-    }, 600);
+    }, 400);
   };
 
   return (
     <div className="space-y-6">
-      {/* Header bar */}
+      {/* 1. Header Bar */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
           Search by Image
         </h1>
       </div>
 
-      {/* Top 2 Panels: Cari dengan gambar & TAMPILAN REFERENSI SEARCH UI persis Screenshot 2 Kiri */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Panel Kiri: Cari dengan gambar (Upload Area) */}
-        <div className="lg:col-span-7 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
+      {/* 2. Top 2 Panels: Cari dengan gambar & TAMPILAN REFERENSI SEARCH UI (Persis Referensi 2 Kanan) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* Panel Kiri: Cari dengan gambar (Upload Area) (7 Kolom) */}
+        <div className="lg:col-span-7 p-5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] shadow-2xs space-y-4 flex flex-col justify-between">
           <div>
-            <h2 className="text-xs font-bold text-slate-900 dark:text-white">
+            <h2 className="text-xs font-bold text-slate-900 dark:text-zinc-100">
               Cari dengan gambar
             </h2>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Unggah foto komponen untuk mencocokkan produk yang mirip
+            <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-0.5">
+              Unggah foto komponen untuk menemukan produk yang mirip
             </p>
-          </div>
 
-          {/* Upload Canvas Box */}
-          <div className="h-44 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40 p-4 flex flex-col items-center justify-center relative overflow-hidden group">
-            <img
-              src="/assets/commerce/prd_linear_guide.svg"
-              alt="Uploaded Component"
-              className="w-48 h-28 object-contain opacity-90 group-hover:scale-105 transition-transform"
-            />
-            <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center pointer-events-none">
-              <span className="text-[10px] text-slate-500 font-mono bg-white/90 dark:bg-slate-900/90 px-2 py-0.5 rounded shadow-2xs">
-                Mendukung file: DWG, PDF, PNG, JPG, STEP, IGES (Maks. 25MB)
-              </span>
+            {/* Dropzone Box */}
+            <div className="mt-3 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-[#181a20]">
+              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-400 dark:text-zinc-500 mb-2">
+                <Upload className="w-5 h-5" />
+              </div>
+              <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                Gambar
+              </p>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5 font-mono">
+                Maksimal 10MB, JPG, JPEG, PNG, TIFF, HEIC (Maks 2048px)
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-slate-500 truncate max-w-xs">
-              File aktif: <strong>{selectedFileName}</strong>
-            </span>
+          <div className="pt-2 flex justify-end">
             <button
               type="button"
               onClick={handleSimulateSearch}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
             >
-              <Search className="w-3.5 h-3.5" />
-              <span>{isSearching ? 'Menganalisis Visual...' : 'Pilih file komponen'}</span>
+              Pilih file komponen
             </button>
           </div>
         </div>
 
-        {/* Panel Kanan: TAMPILAN REFERENSI SEARCH UI persis Screenshot */}
-        <div className="lg:col-span-5 p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+        {/* Panel Kanan: Tampilan Referensi Search UI (5 Kolom) */}
+        <div className="lg:col-span-5 p-5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] shadow-2xs space-y-4 flex flex-col justify-between">
           <div>
-            <div className="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-zinc-500 block">
               TAMPILAN REFERENSI SEARCH UI
-            </div>
+            </span>
 
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="h-28 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center p-2">
-                <img
-                  src="/assets/commerce/prd_linear_guide.svg"
-                  alt="Reference 1"
-                  className="w-full h-full object-contain"
-                />
+            {/* Visual Viewport Placeholders */}
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div className="h-28 rounded-lg bg-slate-50 dark:bg-[#181a20] border border-slate-200 dark:border-zinc-800 flex items-center justify-center">
+                <span className="text-[10px] text-slate-400 dark:text-zinc-500">Preview 1</span>
               </div>
-              <div className="h-28 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center p-2">
-                <img
-                  src="/assets/commerce/prd_mcb_1p.svg"
-                  alt="Reference 2"
-                  className="w-full h-full object-contain"
-                />
+              <div className="h-28 rounded-lg bg-slate-50 dark:bg-[#181a20] border border-slate-200 dark:border-zinc-800 flex items-center justify-center">
+                <span className="text-[10px] text-slate-400 dark:text-zinc-500">Preview 2</span>
               </div>
             </div>
 
-            <div className="text-center">
-              <span className="inline-block px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                ACTIVE MESH VIEWPORT
+            <div className="mt-3">
+              <span className="px-2.5 py-1 rounded bg-slate-100 dark:bg-zinc-800 text-[10px] font-semibold text-slate-600 dark:text-zinc-300 block text-center uppercase tracking-wider">
+                ACTIVE MATCH VIEWPORT
               </span>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-            <span>Toleransi kecocokan: ± 0.025mm</span>
-            <span className="text-emerald-600 font-bold">98.6% Akurasi</span>
+          <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-400">
+            <div>
+              Toleransi kecocokan: <strong className="text-slate-700 dark:text-zinc-300">± 0.025mm</strong>
+            </div>
+            <div>
+              Fitur embedding: <strong className="text-slate-700 dark:text-zinc-300 font-mono">98.6% identik</strong>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Section: Produk Mirip (4 Kandidat Terbaik) persis Screenshot 2 Kiri */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+      {/* 3. Section: Produk Mirip (Persis Referensi 2 Kanan) */}
+      <div className="space-y-4 pt-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-zinc-100">
             Produk Mirip
           </h2>
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-[10px] font-semibold text-slate-600 dark:text-zinc-300">
             4 Kandidat Terbaik
           </span>
         </div>
 
+        {/* 3 Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {similarProducts.map((p) => (
+          {similarProducts.map((prod) => (
             <div
-              key={p.id}
-              className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow group"
+              key={prod.id}
+              className="p-5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] shadow-2xs flex flex-col justify-between hover:border-slate-300 dark:hover:border-zinc-700 transition-colors"
             >
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
-                    {p.brand}
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-900 dark:text-zinc-200">
+                    {prod.brand}
                   </span>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                    {p.matchScore}
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    {prod.matchScore}
                   </span>
                 </div>
 
-                <div className="h-40 bg-slate-50 dark:bg-slate-800/60 rounded-xl mb-3 flex items-center justify-center p-3 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="h-40 rounded-lg bg-slate-50 dark:bg-[#181a20] border border-slate-100 dark:border-zinc-800/80 flex items-center justify-center p-3 mb-3">
                   <img
-                    src={p.imageUrl}
-                    alt={p.title}
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                    src={prod.imageUrl}
+                    alt={prod.title}
+                    className="max-h-full max-w-full object-contain"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-white leading-snug">
-                    {p.title}
-                  </h3>
-                  <div className="text-[10px] text-slate-400">
-                    Sumber: {p.supplier}
-                  </div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 leading-snug">
+                  {prod.title}
+                </h3>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1">
+                  Sumber: {prod.supplier}
+                </p>
+
+                <div className="mt-3 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 dark:text-zinc-500 text-[11px]">Harga Satuan:</span>
+                  <span className="font-bold text-slate-900 dark:text-zinc-100 font-mono">{prod.price}</span>
                 </div>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Harga Estimasi:</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{p.price}</span>
-                </div>
-
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/80">
                 <button
                   type="button"
                   onClick={() => onCreateRFQFromImageSearch({
-                    title: p.title,
-                    supplier: p.supplier,
-                    price: p.price
+                    title: prod.title,
+                    supplier: prod.supplier,
+                    price: prod.price
                   })}
-                  className="w-full py-2 px-3 rounded-xl border border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="w-full py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-xs font-semibold text-slate-700 dark:text-zinc-200 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  <Plus className="w-3.5 h-3.5" />
                   <span>Minta penawaran</span>
                 </button>
               </div>

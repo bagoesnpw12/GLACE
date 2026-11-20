@@ -3,6 +3,15 @@ import { motion, AnimatePresence } from 'motion/react';
 import { staggerContainer, staggerItem, cardInteractiveHover } from '../../utils/motionVariants';
 import { ArrowLeft, Plus, CheckCircle, Clock, Send, X, FileCheck } from 'lucide-react';
 import { DrawingItem } from '../../types/drawing';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+  TablePill
+} from '../ui/table';
 
 interface ControlRecord {
   id: string;
@@ -211,56 +220,59 @@ export const DrawingControlView: React.FC<DrawingControlViewProps> = ({
           </h2>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
-                <th className="py-4 px-6">NO. GAMBAR</th>
-                <th className="py-4 px-6">NAMA</th>
-                <th className="py-4 px-6">REVISI</th>
-                <th className="py-4 px-6">PEMERIKSA</th>
-                <th className="py-4 px-6">TANGGAL</th>
-                <th className="py-4 px-6 text-right">STATUS</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">Memuat riwayat kontrol gambar...</td>
-                </tr>
-              ) : records.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">Belum ada riwayat revisi.</td>
-                </tr>
-              ) : (
-                records.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="py-4 px-6 text-slate-500 dark:text-slate-400 font-mono">
-                      [{r.drawing_number}]
-                    </td>
-                    <td className="py-4 px-6 font-bold text-slate-900 dark:text-white">
+        {/* Standard GLACE Table Riwayat Revisi */}
+        <Table>
+          <TableHeader>
+            <TableRow className="h-10">
+              <TableHead className="w-32">NO. GAMBAR</TableHead>
+              <TableHead>NAMA</TableHead>
+              <TableHead className="w-24">REVISI</TableHead>
+              <TableHead className="w-36">PEMERIKSA</TableHead>
+              <TableHead className="w-32">TANGGAL</TableHead>
+              <TableHead className="w-28 text-right">STATUS</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-slate-400">Memuat riwayat kontrol gambar...</TableCell>
+              </TableRow>
+            ) : records.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="py-8 text-center text-slate-400">Belum ada riwayat revisi.</TableCell>
+              </TableRow>
+            ) : (
+              records.map((r) => {
+                const isApproved = r.status === 'Disetujui' || r.status === 'Terbit';
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell className="text-zinc-500 dark:text-zinc-400 font-mono text-xs">
+                      {r.drawing_number}
+                    </TableCell>
+                    <TableCell className="font-medium text-slate-900 dark:text-zinc-100">
                       {r.drawing_name}
-                    </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-slate-400 font-medium">
+                    </TableCell>
+                    <TableCell className="font-mono text-zinc-700 dark:text-zinc-300">
                       {r.revision}
-                    </td>
-                    <td className="py-4 px-6 text-slate-600 dark:text-slate-400">
-                      [{r.reviewer}]
-                    </td>
-                    <td className="py-4 px-6 text-slate-500 dark:text-slate-400">
-                      [{new Date(r.review_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}]
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-semibold border ${getStatusBadge(r.status)}`}>
-                        {r.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </TableCell>
+                    <TableCell className="text-zinc-600 dark:text-zinc-400">
+                      {r.reviewer}
+                    </TableCell>
+                    <TableCell className="text-zinc-500 dark:text-zinc-400 text-[11px]">
+                      {new Date(r.review_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <TablePill variant={isApproved ? 'success' : 'process'}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${isApproved ? 'bg-emerald-500 dark:bg-white' : 'bg-blue-500 dark:bg-zinc-400'}`} />
+                        <span>{r.status}</span>
+                      </TablePill>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </motion.div>
 
       {/* Ajukan Revisi Modal dengan Motion Smooth Transition */}

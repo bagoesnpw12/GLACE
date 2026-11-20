@@ -198,7 +198,25 @@ app.post('/api/auth/verify-token', (req, res) => {
 // 2. FREE TRIAL 3 HARI (MYSQL DATABASE & ANTI-ABUSE ENGINE)
 // ============================================================================
 
+
+// Simple In-memory IP Rate Limiter for Trial Start (Anti-abuse)
+const trialRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const isRateLimited = (ip: string, limit = 5, windowMs = 60000): boolean => {
+  const now = Date.now();
+  const entry = trialRateLimitMap.get(ip);
+  if (!entry || entry.resetAt < now) {
+    trialRateLimitMap.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  entry.count++;
+  return entry.count > limit;
+};
+
 app.post('/api/trial/start', async (req, res) => {
+  const clientIp = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1');
+  if (isRateLimited(clientIp, 5, 60000)) {
+    return res.status(429).json({ success: false, error: 'TOO_MANY_REQUESTS', message: 'Terlalu banyak permintaan trial. Harap tunggu beberapa saat.' });
+  }
   try {
     const { fingerprint } = req.body;
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
@@ -375,58 +393,153 @@ app.get('/api/dashboard/stats', async (_req, res) => {
       },
     });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
+
+// Middleware helper untuk autentikasi token JWT dan validasi user aktif
+const authenticateUser = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const authHeader = req.headers.authorization;
+
+  // JWT wajib dikirim melalui Authorization Bearer
+  if (!authHeader || !/^Bearer\s+/i.test(authHeader)) {
+    return res.status(401).json({
+      success: false,
+      error: 'UNAUTHORIZED',
+      message: 'Token autentikasi diperlukan.'
+    });
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: 'UNAUTHORIZED',
+      message: 'Token autentikasi tidak boleh kosong.'
+    });
+  }
+
+  try {
+    const decoded: any = jwt.verify(token, JWT_SECRET);
+
+    if (!decoded || (!decoded.userId && !decoded.email)) {
+      return res.status(401).json({
+        success: false,
+        error: 'INVALID_TOKEN',
+        message: 'Payload token tidak valid.'
+      });
+    }
+
+    const userId = decoded.userId || null;
+    const email = decoded.email
+      ? String(decoded.email).toLowerCase()
+      : null;
+
+    const [users]: any = await pool.query(
+      'SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1',
+      [userId, email]
+    );
+
+    if (!users || users.length === 0) {
+      return res.status(401).json({
+        success: false,
+        error: 'USER_NOT_FOUND',
+        message: 'Pengguna tidak ditemukan dalam sistem.'
+      });
+    }
+
+    (req as any).user = users[0];
+
+    return next();
+
+  } catch (err: any) {
+    if (
+      err.name === 'JsonWebTokenError' ||
+      err.name === 'TokenExpiredError' ||
+      err.name === 'NotBeforeError'
+    ) {
+      return res.status(401).json({
+        success: false,
+        error: 'INVALID_TOKEN',
+        message: 'Sesi token tidak valid atau telah kedaluwarsa.'
+      });
+    }
+
+    console.error('Authentication error:', err);
+
+    return res.status(500).json({
+      success: false,
+      error: 'AUTHENTICATION_ERROR',
+      message: 'Terjadi kesalahan autentikasi.'
+    });
+  }
+};
+
+
 
 // ============================================================================
 // 3. CO ENGINEER - DRAWING MANAGEMENT SYSTEM CRUD APIS (MYSQL)
 // ============================================================================
 
 // GET /api/drawings/projects - Ambil semua proyek gambar milik user
-app.get('/api/drawings/projects', async (req, res) => {
+app.get('/api/drawings/projects', authenticateUser, async (req, res) => {
   try {
-    const userEmail = (req.query.email as string) || 'all';
+    const currentUser = (req as any).user;
+    const userEmail = currentUser?.email;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
     const [projects]: any = await pool.query(
       `SELECT p.*, COUNT(d.id) as drawing_count 
        FROM drawing_projects p
        LEFT JOIN drawings d ON p.id = d.project_id
-       WHERE p.user_email = ? OR p.user_email = 'all'
+       WHERE (p.workspace_id = ? AND (p.user_email = ? OR p.user_email = 'all'))
        GROUP BY p.id
        ORDER BY p.created_at DESC`,
-      [userEmail]
+      [workspaceId, userEmail]
     );
 
     res.json({ success: true, projects });
   } catch (err: any) {
     console.error('Error fetching drawing projects:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // POST /api/drawings/projects - Buat proyek gambar baru
-app.post('/api/drawings/projects', async (req, res) => {
+app.post('/api/drawings/projects', authenticateUser, async (req, res) => {
   try {
-    const { name, team, description, userEmail, status } = req.body;
+    const currentUser = (req as any).user;
+    const { name, team, description, status } = req.body;
+    const userEmail = currentUser?.email;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
     if (!name) return res.status(400).json({ success: false, error: 'Nama proyek wajib diisi.' });
 
     const id = `proj_${Date.now().toString(36)}`;
     await pool.query(
-      `INSERT INTO drawing_projects (id, user_email, name, team, description, status) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, userEmail || 'all', name, team || 'Tim Engineering', description || '', status || 'Berjalan']
+      `INSERT INTO drawing_projects (id, workspace_id, user_email, name, team, description, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [id, workspaceId, userEmail, name, team || 'Tim Engineering', description || '', status || 'Berjalan']
     );
 
     res.json({ success: true, project: { id, name, team, description, status: status || 'Berjalan', drawing_count: 0 } });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // GET /api/drawings - Ambil seluruh gambar teknik milik pengguna (dengan filter opsional)
-app.get('/api/drawings', async (req, res) => {
+app.get('/api/drawings', authenticateUser, async (req, res) => {
   try {
-    const userEmail = (req.query.email as string) || 'all';
+    const currentUser = (req as any).user;
+    const userEmail = currentUser?.email;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
     const projectId = req.query.projectId as string;
     const status = req.query.status as string;
 
@@ -434,9 +547,9 @@ app.get('/api/drawings', async (req, res) => {
       SELECT d.*, p.name as project_name 
       FROM drawings d
       LEFT JOIN drawing_projects p ON d.project_id = p.id
-      WHERE (d.user_email = ? OR d.user_email = 'all')
+      WHERE d.workspace_id = ? AND (d.user_email = ? OR d.user_email = 'all')
     `;
-    const params: any[] = [userEmail];
+    const params: any[] = [workspaceId, userEmail];
 
     if (projectId) {
       sql += ' AND d.project_id = ?';
@@ -453,35 +566,44 @@ app.get('/api/drawings', async (req, res) => {
     res.json({ success: true, drawings });
   } catch (err: any) {
     console.error('Error fetching drawings:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // GET /api/drawings/:id - Ambil detail satu gambar (termasuk elements dan layers)
-app.get('/api/drawings/:id', async (req, res) => {
+app.get('/api/drawings/:id', authenticateUser, async (req, res) => {
   try {
+    const currentUser = (req as any).user;
+    const userEmail = currentUser?.email;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
+
     const [rows]: any = await pool.query(
       `SELECT d.*, p.name as project_name 
        FROM drawings d
        LEFT JOIN drawing_projects p ON d.project_id = p.id
-       WHERE d.id = ? LIMIT 1`,
-      [req.params.id]
+       WHERE d.id = ? AND d.workspace_id = ? AND (d.user_email = ? OR d.user_email = 'all') LIMIT 1`,
+      [req.params.id, workspaceId, userEmail]
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, error: 'Gambar tidak ditemukan.' });
+      return res.status(404).json({ success: false, error: 'Gambar tidak ditemukan atau akses ditolak.' });
     }
 
     res.json({ success: true, drawing: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // POST /api/drawings - Buat / Impor gambar baru
-app.post('/api/drawings', async (req, res) => {
+app.post('/api/drawings', authenticateUser, async (req, res) => {
   try {
-    const { projectId, project_id, title, discipline, revision, status, userEmail, email, elementsJson, elements_json, layersJson, layers_json } = req.body;
+    const currentUser = (req as any).user;
+    const { projectId, project_id, title, discipline, revision, status, elementsJson, elements_json, layersJson, layers_json } = req.body;
+    const userEmail = currentUser?.email;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
     const targetProjectId = projectId || project_id;
     if (!title || !targetProjectId) {
       return res.status(400).json({ success: false, error: 'Judul dan ID Proyek wajib diisi.' });
@@ -489,12 +611,13 @@ app.post('/api/drawings', async (req, res) => {
 
     const id = `draw_${Date.now().toString(36)}`;
     await pool.query(
-      `INSERT INTO drawings (id, project_id, user_email, title, discipline, revision, status, elements_json, layers_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO drawings (id, workspace_id, project_id, user_email, title, discipline, revision, status, elements_json, layers_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
+        workspaceId,
         targetProjectId,
-        userEmail || email || 'all',
+        userEmail,
         title,
         discipline || 'Sipil',
         revision || 'Rev A',
@@ -515,15 +638,20 @@ app.post('/api/drawings', async (req, res) => {
     res.json({ success: true, drawingId: id, drawing: rows[0] });
   } catch (err: any) {
     console.error('Error creating drawing:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // PUT /api/drawings/:id - Simpan perubahan gambar dari Drawing Workspace
-app.put('/api/drawings/:id', async (req, res) => {
+app.put('/api/drawings/:id', authenticateUser, async (req, res) => {
   try {
+    const currentUser = (req as any).user;
+    const userEmail = currentUser?.email;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
+
     const { title, status, elementsJson, elements_json, layersJson, layers_json, thumbnail } = req.body;
-    await pool.query(
+    const [result]: any = await pool.query(
       `UPDATE drawings 
        SET title = COALESCE(?, title),
            status = COALESCE(?, status),
@@ -531,16 +659,22 @@ app.put('/api/drawings/:id', async (req, res) => {
            layers_json = COALESCE(?, layers_json),
            thumbnail = COALESCE(?, thumbnail),
            updated_at = NOW()
-       WHERE id = ?`,
+       WHERE id = ? AND workspace_id = ? AND (user_email = ? OR user_email = 'all')`,
       [
         title || null,
         status || null,
         elementsJson || elements_json || null,
         layersJson || layers_json || null,
         thumbnail || null,
-        req.params.id
+        req.params.id,
+        workspaceId,
+        userEmail
       ]
     );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Gambar tidak ditemukan atau Anda tidak memiliki akses untuk mengubahnya.' });
+    }
 
     const [rows]: any = await pool.query(
       `SELECT d.*, p.name as project_name 
@@ -553,7 +687,8 @@ app.put('/api/drawings/:id', async (req, res) => {
     res.json({ success: true, message: 'Gambar berhasil disimpan.', drawing: rows[0] });
   } catch (err: any) {
     console.error('Error saving drawing:', err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
@@ -562,16 +697,17 @@ app.put('/api/drawings/:id', async (req, res) => {
    ========================================================================= */
 
 // 1. Engineering Intelligence Findings API
-app.get('/api/coengineer/findings', async (req, res) => {
+app.get('/api/coengineer/findings', authenticateUser, async (req, res) => {
   try {
     const [findings]: any = await pool.query('SELECT * FROM engineering_findings ORDER BY created_at DESC');
     res.json({ success: true, findings });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.post('/api/coengineer/findings', async (req, res) => {
+app.post('/api/coengineer/findings', authenticateUser, async (req, res) => {
   try {
     const { title, drawing_name, category, severity, details, drawing_id } = req.body;
     const id = `find_${Date.now().toString(36)}`;
@@ -583,21 +719,23 @@ app.post('/api/coengineer/findings', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM engineering_findings WHERE id = ?', [id]);
     res.json({ success: true, finding: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 2. Drawing Types API
-app.get('/api/coengineer/types', async (req, res) => {
+app.get('/api/coengineer/types', authenticateUser, async (req, res) => {
   try {
     const [types]: any = await pool.query('SELECT * FROM drawing_types ORDER BY created_at ASC');
     res.json({ success: true, types });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.post('/api/coengineer/types', async (req, res) => {
+app.post('/api/coengineer/types', authenticateUser, async (req, res) => {
   try {
     const { name, description, default_paper, template_name } = req.body;
     const id = `type_${Date.now().toString(36)}`;
@@ -609,11 +747,12 @@ app.post('/api/coengineer/types', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM drawing_types WHERE id = ?', [id]);
     res.json({ success: true, type: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.put('/api/coengineer/types/:id', async (req, res) => {
+app.put('/api/coengineer/types/:id', authenticateUser, async (req, res) => {
   try {
     const { name, description, default_paper, template_name } = req.body;
     await pool.query(
@@ -628,21 +767,23 @@ app.put('/api/coengineer/types/:id', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM drawing_types WHERE id = ?', [req.params.id]);
     res.json({ success: true, type: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 3. Drawing Control History & Approval API
-app.get('/api/coengineer/control', async (req, res) => {
+app.get('/api/coengineer/control', authenticateUser, async (req, res) => {
   try {
     const [records]: any = await pool.query('SELECT * FROM drawing_control_history ORDER BY review_date DESC, created_at DESC');
     res.json({ success: true, records });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.post('/api/coengineer/control', async (req, res) => {
+app.post('/api/coengineer/control', authenticateUser, async (req, res) => {
   try {
     const { drawing_id, drawing_number, drawing_name, revision, reviewer, review_date, status, notes } = req.body;
     const id = `ctrl_${Date.now().toString(36)}`;
@@ -654,32 +795,35 @@ app.post('/api/coengineer/control', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM drawing_control_history WHERE id = ?', [id]);
     res.json({ success: true, record: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.put('/api/coengineer/control/:id/status', async (req, res) => {
+app.put('/api/coengineer/control/:id/status', authenticateUser, async (req, res) => {
   try {
     const { status } = req.body;
     await pool.query('UPDATE drawing_control_history SET status = ? WHERE id = ?', [status, req.params.id]);
     const [rows]: any = await pool.query('SELECT * FROM drawing_control_history WHERE id = ?', [req.params.id]);
     res.json({ success: true, record: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 4. Drawing Transfers (Import & Export Logs)
-app.get('/api/coengineer/transfers', async (req, res) => {
+app.get('/api/coengineer/transfers', authenticateUser, async (req, res) => {
   try {
     const [transfers]: any = await pool.query('SELECT * FROM drawing_transfers ORDER BY created_at DESC LIMIT 20');
     res.json({ success: true, transfers });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.post('/api/coengineer/transfers', async (req, res) => {
+app.post('/api/coengineer/transfers', authenticateUser, async (req, res) => {
   try {
     const { type, file_name, format, drawing_id } = req.body;
     const id = `trf_${Date.now().toString(36)}`;
@@ -692,12 +836,13 @@ app.post('/api/coengineer/transfers', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM drawing_transfers WHERE id = ?', [id]);
     res.json({ success: true, transfer: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 5. AI Drawing Assistant Query API
-app.post('/api/coengineer/ai-assist', async (req, res) => {
+app.post('/api/coengineer/ai-assist', authenticateUser, async (req, res) => {
   try {
     const { drawing_id, prompt } = req.body;
     const lower = (prompt || '').toLowerCase();
@@ -723,12 +868,13 @@ app.post('/api/coengineer/ai-assist', async (req, res) => {
 
     res.json({ success: true, answer, highlights });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 6. AI Co-Engineer Generate Image API (Real Live AI Generation with Strict Validation & Rate Limit Handling)
-app.post('/api/coengineer/generate-image', async (req, res) => {
+app.post('/api/coengineer/generate-image', authenticateUser, async (req, res) => {
   try {
     const { prompt, width = 800, height = 600 } = req.body;
     if (!prompt || !prompt.trim()) {
@@ -844,16 +990,17 @@ app.post('/api/coengineer/generate-image', async (req, res) => {
    ========================================================================= */
 
 // 1. Projects API
-app.get('/api/pi/projects', async (req, res) => {
+app.get('/api/pi/projects', authenticateUser, async (req, res) => {
   try {
     const [projects]: any = await pool.query('SELECT * FROM pi_projects ORDER BY created_at DESC');
     res.json({ success: true, projects });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.post('/api/pi/projects', async (req, res) => {
+app.post('/api/pi/projects', authenticateUser, async (req, res) => {
   try {
     const { name, budget, actual_cost, status, start_date, end_date, manager, progress } = req.body;
     const id = `proj-${Date.now().toString(36)}`;
@@ -875,31 +1022,34 @@ app.post('/api/pi/projects', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM pi_projects WHERE id = ?', [id]);
     res.json({ success: true, project: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 2. Project Control API
-app.get('/api/pi/project-control', async (req, res) => {
+app.get('/api/pi/project-control', authenticateUser, async (req, res) => {
   try {
     const [controls]: any = await pool.query('SELECT * FROM pi_project_control ORDER BY created_at DESC');
     res.json({ success: true, controls });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 3. Tasks & Issues API
-app.get('/api/pi/tasks-issues', async (req, res) => {
+app.get('/api/pi/tasks-issues', authenticateUser, async (req, res) => {
   try {
     const [items]: any = await pool.query('SELECT * FROM pi_tasks_issues ORDER BY due_date ASC');
     res.json({ success: true, items });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.post('/api/pi/tasks-issues', async (req, res) => {
+app.post('/api/pi/tasks-issues', authenticateUser, async (req, res) => {
   try {
     const { project_id, title, type, priority, assignee, due_date, status } = req.body;
     const id = `ti-${Date.now().toString(36)}`;
@@ -911,21 +1061,23 @@ app.post('/api/pi/tasks-issues', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM pi_tasks_issues WHERE id = ?', [id]);
     res.json({ success: true, item: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 4. RFI & Submittals API
-app.get('/api/pi/rfi-submittals', async (req, res) => {
+app.get('/api/pi/rfi-submittals', authenticateUser, async (req, res) => {
   try {
     const [rfis]: any = await pool.query('SELECT * FROM pi_rfi_submittals ORDER BY date_submitted DESC');
     res.json({ success: true, rfis });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-app.post('/api/pi/rfi-submittals', async (req, res) => {
+app.post('/api/pi/rfi-submittals', authenticateUser, async (req, res) => {
   try {
     const { project_id, rfi_number, subject, type, from_party, assigned_to, date_submitted, status } = req.body;
     const id = `rfi-${Date.now().toString(36)}`;
@@ -937,27 +1089,30 @@ app.post('/api/pi/rfi-submittals', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM pi_rfi_submittals WHERE id = ?', [id]);
     res.json({ success: true, rfi: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 5. AI Insights API
-app.get('/api/pi/ai-insights', async (req, res) => {
+app.get('/api/pi/ai-insights', authenticateUser, async (req, res) => {
   try {
     const [insights]: any = await pool.query('SELECT * FROM pi_ai_insights ORDER BY created_at DESC');
     res.json({ success: true, insights });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 6. Reports API
-app.get('/api/pi/reports', async (req, res) => {
+app.get('/api/pi/reports', authenticateUser, async (req, res) => {
   try {
     const [reports]: any = await pool.query('SELECT * FROM pi_reports ORDER BY created_at DESC');
     res.json({ success: true, reports });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
@@ -966,32 +1121,40 @@ app.get('/api/pi/reports', async (req, res) => {
 // ============================================================================
 
 // 1. Get all documents
-app.get('/api/di/documents', async (req, res) => {
+app.get('/api/di/documents', authenticateUser, async (req, res) => {
   try {
-    const [docs]: any = await pool.query('SELECT * FROM documents ORDER BY updated_at DESC');
+    const currentUser = (req as any).user;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
+    const [docs]: any = await pool.query('SELECT * FROM documents WHERE workspace_id = ? ORDER BY updated_at DESC', [workspaceId]);
     res.json({ success: true, documents: docs });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 2. Upload / Create document
-app.post('/api/di/documents', async (req, res) => {
+app.post('/api/di/documents', authenticateUser, async (req, res) => {
   try {
+    const currentUser = (req as any).user;
+    const userEmail = currentUser?.email;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
     const { title, discipline, doc_type, category, revision, status, author, content_text, file_size } = req.body;
     const id = `doc-${Date.now().toString(36)}`;
     await pool.query(
-      `INSERT INTO documents (id, title, discipline, doc_type, category, revision, status, author, content_text, file_size, ocr_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO documents (id, workspace_id, user_email, title, discipline, doc_type, category, revision, status, author, content_text, file_size, ocr_status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
+        workspaceId,
+        userEmail,
         title,
         discipline || 'Elektrikal',
         doc_type || 'PDF',
         category || 'Technical Specification',
         revision || 'Rev A',
         status || 'Under Review',
-        author || 'Lead Engineer',
+        author || currentUser?.full_name || 'Lead Engineer',
         content_text || '',
         file_size || '3.5 MB',
         'Verified 100%'
@@ -1000,46 +1163,60 @@ app.post('/api/di/documents', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM documents WHERE id = ?', [id]);
     res.json({ success: true, document: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 3. Update document status (Approve / Reject)
-app.patch('/api/di/documents/:id/status', async (req, res) => {
+app.patch('/api/di/documents/:id/status', authenticateUser, async (req, res) => {
   try {
+    const currentUser = (req as any).user;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
     const { id } = req.params;
     const { status } = req.body;
-    await pool.query('UPDATE documents SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [status, id]);
+    const [result]: any = await pool.query('UPDATE documents SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND workspace_id = ?', [status, id, workspaceId]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Dokumen tidak ditemukan atau akses ditolak.' });
+    }
     const [rows]: any = await pool.query('SELECT * FROM documents WHERE id = ?', [id]);
     res.json({ success: true, document: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 4. Delete document
-app.delete('/api/di/documents/:id', async (req, res) => {
+app.delete('/api/di/documents/:id', authenticateUser, async (req, res) => {
   try {
+    const currentUser = (req as any).user;
+    const workspaceId = currentUser?.workspace_id || 'org_glace_corp';
     const { id } = req.params;
-    await pool.query('DELETE FROM documents WHERE id = ?', [id]);
+    const [result]: any = await pool.query('DELETE FROM documents WHERE id = ? AND workspace_id = ?', [id, workspaceId]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, error: 'NOT_FOUND', message: 'Dokumen tidak ditemukan atau akses ditolak.' });
+    }
     res.json({ success: true, message: 'Document deleted successfully' });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 5. Get revisions
-app.get('/api/di/revisions', async (req, res) => {
+app.get('/api/di/revisions', authenticateUser, async (req, res) => {
   try {
     const [revisions]: any = await pool.query('SELECT * FROM document_revisions ORDER BY created_at DESC');
     res.json({ success: true, revisions });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 6. Create revision
-app.post('/api/di/revisions', async (req, res) => {
+app.post('/api/di/revisions', authenticateUser, async (req, res) => {
   try {
     const { document_id, revision, change_summary, changed_by, status } = req.body;
     const id = `rev-${Date.now().toString(36)}`;
@@ -1052,58 +1229,25 @@ app.post('/api/di/revisions', async (req, res) => {
     const [rows]: any = await pool.query('SELECT * FROM document_revisions WHERE id = ?', [id]);
     res.json({ success: true, revision: rows[0] });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // 7. Get Knowledge Base
-app.get('/api/di/knowledge-base', async (req, res) => {
+app.get('/api/di/knowledge-base', authenticateUser, async (req, res) => {
   try {
     const [items]: any = await pool.query('SELECT * FROM knowledge_base ORDER BY created_at DESC');
     res.json({ success: true, items });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
 // ============================================================================
 // BILLING & SUBSCRIPTION MANAGEMENT RBAC ENGINE (ENTERPRISE GRADE)
 // ============================================================================
-
-// Middleware helper untuk autentikasi token JWT dan validasi user aktif
-const authenticateUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token as string);
-
-  if (!token) {
-    // Mode fallback: jika token tidak disertakan, periksa header x-user-email jika ada untuk identifikasi
-    const userEmail = (req.headers['x-user-email'] as string) || (req.query.userEmail as string);
-    if (userEmail) {
-      try {
-        const [users]: any = await pool.query('SELECT * FROM users WHERE email = ? LIMIT 1', [userEmail.toLowerCase()]);
-        if (users.length > 0) {
-          (req as any).user = users[0];
-          return next();
-        }
-      } catch (e) {
-        // Continue to unauthorized
-      }
-    }
-    return res.status(401).json({ success: false, error: 'UNAUTHORIZED', message: 'Token otentikasi diperlukan.' });
-  }
-
-  try {
-    const decoded: any = jwt.verify(token, JWT_SECRET);
-    const [users]: any = await pool.query('SELECT * FROM users WHERE id = ? OR email = ? LIMIT 1', [decoded.userId, decoded.email]);
-    if (users.length === 0) {
-      return res.status(401).json({ success: false, error: 'USER_NOT_FOUND', message: 'Pengguna tidak ditemukan dalam sistem.' });
-    }
-    (req as any).user = users[0];
-    next();
-  } catch (err: any) {
-    return res.status(401).json({ success: false, error: 'INVALID_TOKEN', message: 'Sesi token tidak valid atau telah kedaluwarsa.' });
-  }
-};
 
 // GET /api/billing/overview
 // User Biasa: Hanya melihat subscription info & usage quota (financial details disembunyikan/dibatasi)
@@ -1193,7 +1337,8 @@ app.get('/api/billing/overview', authenticateUser, async (req: express.Request, 
 
     res.json(baseResponse);
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
@@ -1220,7 +1365,8 @@ app.get('/api/billing/invoices', authenticateUser, async (req: express.Request, 
 
     res.json({ success: true, invoices });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
@@ -1278,7 +1424,8 @@ app.post('/api/billing/payment-method', authenticateUser, async (req: express.Re
       }
     });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
@@ -1321,14 +1468,36 @@ app.put('/api/billing/tax-info', authenticateUser, async (req: express.Request, 
 
     res.json({ success: true, message: 'Informasi penagihan dan faktur pajak berhasil disimpan.' });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('API Error:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 
-// POST /api/billing/dev-switch-role - Endpoint utilitas pengembangan untuk menguji akses berbagai role
+// POST /api/billing/dev-switch-role - Endpoint utilitas pengembangan untuk menguji akses berbagai role (Hanya Super Admin & Non-Production)
 app.post('/api/billing/dev-switch-role', authenticateUser, async (req: express.Request, res: express.Response) => {
   try {
+    // 1. Matikan total di environment production
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        success: false,
+        error: 'FORBIDDEN',
+        message: 'Endpoint pengalihan role pengembangan dinonaktifkan di environment production.'
+      });
+    }
+
     const user = (req as any).user;
+    const currentRole = (user.role || '').toLowerCase();
+
+    // 2. Proteksi Privilege Escalation: Hanya Super Admin yang berhak mengubah role
+    const isSuperAdmin = currentRole.includes('super admin') || currentRole === 'superadmin';
+    if (!isSuperAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: 'FORBIDDEN',
+        message: 'Akses ditolak. Pengguna biasa tidak memiliki izin untuk mengubah hak akses / role.'
+      });
+    }
+
     const { targetRole } = req.body;
     const validRoles = ['User', 'Admin Organisasi', 'Finance / Billing Admin', 'Super Admin'];
     
@@ -1348,7 +1517,8 @@ app.post('/api/billing/dev-switch-role', authenticateUser, async (req: express.R
 
     res.json({ success: true, message: `Role berhasil dialihkan ke ${targetRole}`, newRole: targetRole });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Error on dev-switch-role:', err);
+    res.status(500).json({ success: false, error: 'INTERNAL_SERVER_ERROR', message: 'Terjadi kesalahan internal server.' });
   }
 });
 

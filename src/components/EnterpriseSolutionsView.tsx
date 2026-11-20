@@ -1,4 +1,5 @@
 import React from 'react';
+import { EnterpriseSolutionsOverviewView } from './enterprise/EnterpriseSolutionsOverviewView';
 import { EnterpriseOrganizationView } from './enterprise/EnterpriseOrganizationView';
 import { EnterpriseAIView } from './enterprise/EnterpriseAIView';
 import { EnterpriseIntegrationsView } from './enterprise/EnterpriseIntegrationsView';
@@ -41,6 +42,11 @@ export const EnterpriseSolutionsView: React.FC<EnterpriseProps> = ({
     return <EnterpriseGovernanceView onAddActivity={onAddActivity} />;
   }
 
-  // DEFAULT VIEW JIKA BELUM ADA SUBMENU TERPILIH -> ORGANISASI (SESUAI DENGAN GAMBAR 1)
-  return <EnterpriseOrganizationView onAddActivity={onAddActivity} />;
+  // DEFAULT VIEW JIKA BELUM ADA SUBMENU TERPILIH -> OVERVIEW (SESUAI DENGAN GAMBAR REFERENSI 1 KIRI)
+  return (
+    <EnterpriseSolutionsOverviewView 
+      onAddActivity={onAddActivity} 
+      onSelectSubItem={onSelectSubItem} 
+    />
+  );
 };

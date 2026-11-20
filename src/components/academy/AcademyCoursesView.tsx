@@ -2,36 +2,16 @@ import React, { useState } from 'react';
 import { 
   Search, 
   Filter, 
-  Play, 
-  Clock, 
+  Bell, 
   BookOpen, 
-  CheckCircle2, 
-  ExternalLink,
-  Layers,
-  ChevronRight,
-  Bell,
-  Sparkles,
-  Info
+  ShoppingCart, 
+  Layers 
 } from 'lucide-react';
+import { TablePill } from '../ui/table';
 
 interface CoursesViewProps {
   onAddActivity?: (activity: string, module: string) => void;
   onSelectSubItem?: (item: string) => void;
-}
-
-interface CourseItem {
-  id: string;
-  code: string;
-  title: string;
-  category: string;
-  provider: string;
-  completedLessons: number;
-  totalLessons: number;
-  duration: string;
-  difficulty: 'Dasar' | 'Menengah' | 'Lanjutan';
-  progress: number;
-  description: string;
-  tag: string;
 }
 
 export const AcademyCoursesView: React.FC<CoursesViewProps> = ({ 
@@ -39,256 +19,113 @@ export const AcademyCoursesView: React.FC<CoursesViewProps> = ({
   onSelectSubItem 
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('Semua');
-  const [notification, setNotification] = useState<string | null>(null);
 
-  // Realistic course catalog matching the Wide Grid reference layout
-  const [courses, setCourses] = useState<CourseItem[]>([
-    {
-      id: 'crs-1',
-      code: 'HW-FUS-101',
-      title: 'HUAWEI FUSION INDUSTRIAL CLOUD',
-      provider: 'Huawei Enterprise',
-      category: 'Cloud & Komputasi Industri',
-      completedLessons: 12,
-      totalLessons: 48,
-      duration: '16 Jam Pelatihan',
-      difficulty: 'Dasar',
-      progress: 25,
-      description: 'Arsitektur komputasi awan industri Huawei Fusion, orkestrasi kontainer pabrik pintar, dan manajemen telemetri data IoT edge.',
-      tag: 'Huawei'
-    },
-    {
-      id: 'crs-2',
-      code: 'SS-FUS-201',
-      title: 'SAMSUNG FUSION SMART MANUFACTURING',
-      provider: 'Samsung SDS',
-      category: 'Otomasi Manufaktur',
-      completedLessons: 18,
-      totalLessons: 30,
-      duration: '20 Jam Pelatihan',
-      difficulty: 'Menengah',
-      progress: 60,
-      description: 'Integrasi lini produksi semikonduktor, pemantauan otomatisasi jalur perakitan, dan standar efisiensi operasional MES.',
-      tag: 'Samsung'
-    },
-    {
-      id: 'crs-3',
-      code: 'AP-FUS-301',
-      title: 'APPLE FUSION HARDWARE & SECURITY',
-      provider: 'Apple Industrial Tech',
-      category: 'Keamanan Perangkat Keras',
-      completedLessons: 10,
-      totalLessons: 24,
-      duration: '18 Jam Pelatihan',
-      difficulty: 'Lanjutan',
-      progress: 42,
-      description: 'Implementasi hardware security module (HSM), enkripsi chip silikon industri, dan standardisasi keamanan data endpoint.',
-      tag: 'Apple'
-    },
-    {
-      id: 'crs-4',
-      code: 'VV-FUS-401',
-      title: 'VIVO FUSION OPTICAL SENSING',
-      provider: 'Vivo R&D Industrial',
-      category: 'Sensor & Optik Presisi',
-      completedLessons: 6,
-      totalLessons: 28,
-      duration: '15 Jam Pelatihan',
-      difficulty: 'Dasar',
-      progress: 21,
-      description: 'Kalibrasi sensor citra optik presisi tinggi, inspeksi cacat permukaan berbasis computer vision, dan integrasi kendali mutu.',
-      tag: 'Vivo'
-    },
-    {
-      id: 'crs-5',
-      code: 'OP-FUS-501',
-      title: 'OPPO FUSION FAST CHARGING & BATTERY',
-      provider: 'Oppo Industrial Labs',
-      category: 'Teknik Energi & Baterai',
-      completedLessons: 14,
-      totalLessons: 25,
-      duration: '17 Jam Pelatihan',
-      difficulty: 'Menengah',
-      progress: 56,
-      description: 'Manajemen siklus termal baterai berdaya besar, manajemen Battery Management System (BMS), dan efisiensi pengisian cepat industri.',
-      tag: 'Oppo'
-    },
-    {
-      id: 'crs-6',
-      code: 'IN-FUS-601',
-      title: 'INFINIX FUSION EMBEDDED TELEMETRY',
-      provider: 'Infinix Hardware Labs',
-      category: 'Sistem Tertanam (Embedded)',
-      completedLessons: 4,
-      totalLessons: 20,
-      duration: '14 Jam Pelatihan',
-      difficulty: 'Dasar',
-      progress: 20,
-      description: 'Protokol komunikasi berdaya rendah LPWAN, pemantauan status mikrokontroler sensor industri, dan debugging firmware RTOS.',
-      tag: 'Infinix'
-    }
-  ]);
-
-  const handleStartCourse = (course: CourseItem) => {
-    setCourses(prev => prev.map(c => {
-      if (c.id === course.id) {
-        const next = Math.min(c.completedLessons + 1, c.totalLessons);
-        return {
-          ...c,
-          completedLessons: next,
-          progress: Math.round((next / c.totalLessons) * 100)
-        };
-      }
-      return c;
-    }));
-    setNotification(`Melanjutkan sesi belajar: ${course.title} (${course.code})`);
-    if (onAddActivity) {
-      onAddActivity(`Melanjutkan kursus: ${course.title}`, 'Glace Academy');
-    }
-    setTimeout(() => setNotification(null), 3500);
-  };
-
-  const filteredCourses = courses.filter(c => {
-    const matchSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        c.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        c.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        c.tag.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchSearch;
-  });
+  // 6 Kursus Sesuai Referensi 1 Kanan (HUAWEI, SAMSUNG, APPLE, VIVO, OPPO, INFINIX)
+  const courses = [
+    { title: 'HUAWEI FUSION', brand: '[Huawei]', lessons: '[R] dari [M] pelajaran' },
+    { title: 'SAMSUNG FUSION', brand: '[Samsung]', lessons: '[R] dari [M] pelajaran' },
+    { title: 'APPLE FUSION', brand: '[Apple]', lessons: '[R] dari [M] pelajaran' },
+    { title: 'VIVO FUSION', brand: '[Vivo]', lessons: '[R] dari [M] pelajaran' },
+    { title: 'OPPO FUSION', brand: '[Oppo]', lessons: '[R] dari [M] pelajaran' },
+    { title: 'INFINIX FUSION', brand: '[Infinix]', lessons: '[R] dari [M] pelajaran' },
+  ];
 
   return (
-    <div className="space-y-6 max-w-7xl">
-      {/* 1. Header Bar: Sub-Brand Learning Hub & Quick Nav */}
-      <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
-            <BookOpen className="w-4 h-4" />
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* 1. Top Bar: Title "Courses" + Learning Hub Pill Kiri + Link Kanan Sesuai Referensi 1 Kanan */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Courses
+          </h1>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="p-1 rounded bg-blue-600 text-white flex items-center justify-center">
+              <BookOpen className="w-3.5 h-3.5" />
+            </span>
+            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Learning Hub</span>
+            <span className="text-[10px] text-zinc-400">Internal Portal</span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 dark:text-white text-base">
-                Learning Hub
-              </span>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                Internal Portal
-              </span>
-            </div>
-          </div>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-2">
+            Courses: [Deskripsi singkat menu]
+          </p>
         </div>
 
-        <div className="flex items-center gap-6 text-xs">
-          <button 
-            type="button" 
-            className="font-semibold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 pb-1"
-          >
+        {/* Tab Links Kanan Sesuai Screenshot */}
+        <div className="flex items-center gap-4 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <button className="text-zinc-900 dark:text-zinc-100 font-semibold cursor-pointer">
             Courses
           </button>
           <button 
-            type="button" 
             onClick={() => onSelectSubItem && onSelectSubItem('Learning Paths')}
-            className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors pb-1"
+            className="hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
           >
             Learning Paths
           </button>
-          <button 
-            type="button" 
-            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            title="Pemberitahuan Akademik"
-          >
+          <button className="p-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer">
             <Bell className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Title & Description */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Courses
-        </h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Katalog lengkap modul pelatihan teknik industri, arsitektur cloud pabrik, dan sertifikasi komputasi.
-        </p>
-      </div>
-
-      {/* Notification Toast */}
-      {notification && (
-        <div className="p-3 rounded-lg text-xs bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span>{notification}</span>
-        </div>
-      )}
-
-      {/* 2. Search & Filter Bar */}
+      {/* 2. Search Input & Filter Button Sesuai Referensi 1 Kanan */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari kursus, platform, atau teknologi industri..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-white dark:bg-[#131722] border border-slate-200/80 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="Cari..."
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-zinc-200 dark:border-[#27272a] bg-white dark:bg-[#121316] text-zinc-900 dark:text-zinc-100 focus:outline-hidden"
           />
         </div>
-        <button 
-          type="button" 
-          className="px-3.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-[#131722] border border-slate-200/80 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 shrink-0 transition-colors"
+
+        <button
+          onClick={() => alert('Filter kursus')}
+          className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-[#27272a] bg-white dark:bg-[#121316] text-zinc-700 dark:text-zinc-300 text-xs font-medium hover:bg-zinc-50 dark:hover:bg-[#18191f] cursor-pointer"
         >
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
-          Filter
+          <Filter className="w-3.5 h-3.5 text-zinc-400" />
+          <span>Filter</span>
         </button>
       </div>
 
-      {/* 3. 3-Column Wide Grid Layout as in Reference */}
+      {/* 3. Grid 3-Kolom Kartu Kursus Sesuai Referensi 1 Kanan */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredCourses.map((c) => (
-          <div 
-            key={c.id}
-            className="p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#131722] shadow-2xs flex flex-col justify-between space-y-4 hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+        {courses.map((crs, idx) => (
+          <div
+            key={idx}
+            className="rounded-xl border border-zinc-200/90 dark:border-[#23252c] bg-white dark:bg-[#121316] p-4 flex flex-col justify-between space-y-3 hover:border-zinc-400 dark:hover:border-zinc-700 transition-colors"
           >
-            {/* Header Title */}
             <div>
-              <div className="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                {c.title}
-              </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">
-                {c.provider} • {c.category}
-              </div>
-            </div>
+              <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wide">
+                {crs.title}
+              </h3>
 
-            {/* Thumbnail Canvas Area as in Wireframe/Reference */}
-            <div className="h-32 w-full rounded-lg bg-slate-50 dark:bg-[#181d2a] border border-slate-200/70 dark:border-slate-800 flex items-center justify-center relative overflow-hidden group">
-              <div className="text-center space-y-1">
-                <span className="text-xs font-semibold text-rose-500/80 dark:text-rose-400/80 uppercase tracking-widest block">
+              {/* Area Canvas Pratinjau Gambar Berarsir Merah Bertuliskan "Gambar" Sesuai Screenshot */}
+              <div className="mt-2.5 w-full h-36 rounded-lg bg-zinc-100/70 dark:bg-[#18191f] border border-zinc-200/60 dark:border-[#27272a] relative overflow-hidden flex items-center justify-center select-none">
+                <div className="absolute inset-0 opacity-[0.06] dark:opacity-[0.04] [background-image:linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] dark:[background-image:linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] [background-size:16px_16px]" />
+                <span className="text-xs font-medium text-rose-500/80 dark:text-zinc-400 z-10">
                   Gambar
                 </span>
-                <span className="text-[10px] text-slate-400 block">
-                  Modul Praktik Terverifikasi
-                </span>
               </div>
-              <span className="absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded bg-black/60 text-white font-mono">
-                {c.progress}%
-              </span>
-            </div>
 
-            {/* Course Meta Info */}
-            <div>
-              <div className="text-xs font-semibold text-slate-900 dark:text-white">
-                [{c.tag}]
-              </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                [{c.completedLessons}] dari [{c.totalLessons}] pelajaran • {c.duration}
+              {/* Sub-info brand dan pelajaran */}
+              <div className="mt-3 text-xs">
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100 block">{crs.brand}</span>
+                <span className="text-[11px] text-zinc-400">{crs.lessons}</span>
               </div>
             </div>
 
-            {/* Action Button: RFQ / Belajar */}
+            {/* Tombol + RFQ Sesuai Screenshot */}
             <button
-              type="button"
-              onClick={() => handleStartCourse(c)}
-              className="w-full py-2 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:border-blue-400 dark:hover:border-blue-700 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors flex items-center justify-center gap-1.5"
+              onClick={() => {
+                if (onAddActivity) onAddActivity(`Mengikuti kursus ${crs.title}`, 'Glace Academy');
+                alert(`Membuka pendaftaran: ${crs.title}`);
+              }}
+              className="w-full py-1.5 rounded-lg border border-zinc-200 dark:border-[#27272a] text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-[#18191f] text-xs font-medium flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
             >
-              <span>+ Mulai / Lanjutkan Belajar</span>
+              <ShoppingCart className="w-3.5 h-3.5 text-zinc-500" />
+              <span>+ RFQ</span>
             </button>
           </div>
         ))}

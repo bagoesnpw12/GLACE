@@ -19,6 +19,15 @@ import {
   Eye,
   KeyRound
 } from 'lucide-react';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+  TablePill
+} from '../ui/table';
 
 interface BillingViewProps {
   userEmail?: string;
@@ -116,14 +125,12 @@ export const SettingsBillingView: React.FC<BillingViewProps> = ({
     setFetchError(null);
     try {
       const token = localStorage.getItem('glace_jwt_token');
-      const headers: Record<string, string> = {
-        'x-user-email': userEmail
-      };
+      const headers: Record<string, string> = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`http://localhost:3001/api/billing/overview?userEmail=${encodeURIComponent(userEmail)}`, {
+      const res = await fetch('http://localhost:3001/api/billing/overview', {
         headers
       });
 
@@ -163,8 +170,7 @@ export const SettingsBillingView: React.FC<BillingViewProps> = ({
     try {
       const token = localStorage.getItem('glace_jwt_token');
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'x-user-email': userEmail
+        'Content-Type': 'application/json'
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -207,8 +213,7 @@ export const SettingsBillingView: React.FC<BillingViewProps> = ({
     try {
       const token = localStorage.getItem('glace_jwt_token');
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'x-user-email': userEmail
+        'Content-Type': 'application/json'
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -244,8 +249,7 @@ export const SettingsBillingView: React.FC<BillingViewProps> = ({
     try {
       const token = localStorage.getItem('glace_jwt_token');
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'x-user-email': userEmail
+        'Content-Type': 'application/json'
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -655,62 +659,61 @@ export const SettingsBillingView: React.FC<BillingViewProps> = ({
             </span>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-[#181d2a]/50 text-slate-500 dark:text-slate-400">
-                  <th className="py-3 px-4 font-medium">No. Invoice</th>
-                  <th className="py-3 px-4 font-medium">Tanggal</th>
-                  <th className="py-3 px-4 font-medium">Rincian Paket</th>
-                  <th className="py-3 px-4 font-medium">Metode</th>
-                  <th className="py-3 px-4 font-medium">Total</th>
-                  <th className="py-3 px-4 font-medium text-center">Status</th>
-                  <th className="py-3 px-4 font-medium text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {(data?.invoices || []).map((inv) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/50 dark:hover:bg-[#181d2a]/30 transition-colors">
-                    <td className="py-3.5 px-4 font-mono font-medium text-slate-900 dark:text-white">
-                      {inv.invoice_no}
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-300">
-                      {inv.invoice_date}
-                    </td>
-                    <td className="py-3.5 px-4 max-w-xs">
-                      <div className="text-slate-800 dark:text-slate-200 font-medium truncate">{inv.description}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        DPP: {formatRupiah(inv.subtotal)} • PPN: {formatRupiah(inv.tax_amount)}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">
-                      {inv.payment_method_summary}
-                    </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">
-                      {formatRupiah(inv.total_amount)}
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                        <CheckCircle2 className="w-3 h-3" />
-                        {inv.status === 'paid' ? 'Lunas' : inv.status}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadInvoice(inv.invoice_no)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
-                        title="Unduh Invoice & e-Faktur PDF"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Unduh PDF
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Standard GLACE Table Riwayat Faktur */}
+          <Table>
+            <TableHeader>
+              <TableRow className="h-10">
+                <TableHead className="w-32">NO. INVOICE</TableHead>
+                <TableHead className="w-28">TANGGAL</TableHead>
+                <TableHead>RINCIAN PAKET</TableHead>
+                <TableHead className="w-32">METODE</TableHead>
+                <TableHead className="w-32">TOTAL</TableHead>
+                <TableHead className="w-24 text-center">STATUS</TableHead>
+                <TableHead className="w-24 text-right">AKSI</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(data?.invoices || []).map((inv) => (
+                <TableRow key={inv.id}>
+                  <TableCell className="font-mono font-medium text-slate-900 dark:text-zinc-100">
+                    {inv.invoice_no}
+                  </TableCell>
+                  <TableCell className="text-zinc-500 dark:text-zinc-400 text-[11px]">
+                    {inv.invoice_date}
+                  </TableCell>
+                  <TableCell className="max-w-xs">
+                    <div className="text-slate-800 dark:text-zinc-100 font-medium truncate">{inv.description}</div>
+                    <div className="text-[10px] text-zinc-400 mt-0.5">
+                      DPP: {formatRupiah(inv.subtotal)} • PPN: {formatRupiah(inv.tax_amount)}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-zinc-600 dark:text-zinc-400">
+                    {inv.payment_method_summary}
+                  </TableCell>
+                  <TableCell className="font-mono font-medium text-slate-900 dark:text-zinc-100">
+                    {formatRupiah(inv.total_amount)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <TablePill variant="success">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>{inv.status === 'paid' ? 'Done' : inv.status}</span>
+                    </TablePill>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadInvoice(inv.invoice_no)}
+                      className="inline-flex items-center gap-1.5 px-2 py-1 text-xs text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded transition-colors cursor-pointer"
+                      title="Unduh Invoice & e-Faktur PDF"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>PDF</span>
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : (
         /* Notice for users without invoice access */

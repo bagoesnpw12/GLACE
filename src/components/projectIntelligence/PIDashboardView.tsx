@@ -37,6 +37,15 @@ import {
   Check 
 } from 'lucide-react';
 import { EngineeringProject, formatIDR } from '../../data/projectIntelligenceData';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+  TablePill
+} from '../ui/table';
 
 interface PIDashboardViewProps {
   projects: EngineeringProject[];
@@ -801,171 +810,170 @@ export const PIDashboardView: React.FC<PIDashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Tabel 11 Kolom */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/40">
-                <th className="py-4 px-4 cursor-pointer" onClick={() => toggleSort('code')}>
-                  <div className="flex items-center gap-1">
-                    <span>KODE PROYEK</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="py-4 px-4 cursor-pointer" onClick={() => toggleSort('name')}>
-                  <div className="flex items-center gap-1">
-                    <span>NAMA PROYEK</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="py-4 px-4">KLIEN</th>
-                <th className="py-4 px-4">PROJECT MANAGER</th>
-                <th className="py-4 px-4 cursor-pointer" onClick={() => toggleSort('progress')}>
-                  <div className="flex items-center gap-1">
-                    <span>PROGRESS</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="py-4 px-4 cursor-pointer" onClick={() => toggleSort('budget')}>
-                  <div className="flex items-center gap-1">
-                    <span>ANGGARAN</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="py-4 px-4 cursor-pointer" onClick={() => toggleSort('actualCost')}>
-                  <div className="flex items-center gap-1">
-                    <span>BIAYA AKTUAL</span>
-                    <ArrowUpDown className="w-3 h-3" />
-                  </div>
-                </th>
-                <th className="py-4 px-4">STATUS</th>
-                <th className="py-4 px-4">TANGGAL MULAI</th>
-                <th className="py-4 px-4">DEADLINE</th>
-                <th className="py-4 px-4 text-right">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {paginatedProjects.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="py-12 text-center text-slate-400">
-                    Tidak ada proyek yang sesuai dengan kata kunci atau filter pencarian.
-                  </td>
-                </tr>
-              ) : (
-                paginatedProjects.map((proj) => (
-                  <tr key={proj.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    {/* 1. Kode Proyek */}
-                    <td className="py-4 px-4 font-mono font-bold text-slate-900 dark:text-white whitespace-nowrap">
-                      {proj.code}
-                    </td>
+        {/* Standard GLACE Table 11 Kolom */}
+        <Table>
+          <TableHeader>
+            <TableRow className="h-10">
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('code')}>
+                <div className="flex items-center gap-1">
+                  <span>KODE PROYEK</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('name')}>
+                <div className="flex items-center gap-1">
+                  <span>NAMA PROYEK</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </TableHead>
+              <TableHead>KLIEN</TableHead>
+              <TableHead>PROJECT MANAGER</TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('progress')}>
+                <div className="flex items-center gap-1">
+                  <span>PROGRESS</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('budget')}>
+                <div className="flex items-center gap-1">
+                  <span>ANGGARAN</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('actualCost')}>
+                <div className="flex items-center gap-1">
+                  <span>BIAYA AKTUAL</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </TableHead>
+              <TableHead>STATUS</TableHead>
+              <TableHead>TANGGAL MULAI</TableHead>
+              <TableHead>DEADLINE</TableHead>
+              <TableHead className="text-right">AKSI</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedProjects.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={11} className="py-12 text-center text-slate-400">
+                  Tidak ada proyek yang sesuai dengan kata kunci atau filter pencarian.
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedProjects.map((proj) => (
+                <TableRow key={proj.id}>
+                  {/* 1. Kode Proyek */}
+                  <TableCell className="font-mono font-medium text-slate-900 dark:text-zinc-100 whitespace-nowrap">
+                    {proj.code}
+                  </TableCell>
 
-                    {/* 2. Nama Proyek */}
-                    <td className="py-4 px-4 font-bold text-slate-900 dark:text-white min-w-[200px]">
+                  {/* 2. Nama Proyek */}
+                  <TableCell className="font-medium text-slate-900 dark:text-zinc-100 min-w-[200px]">
+                    <button
+                      onClick={() => onSelectProject(proj)}
+                      className="text-left hover:text-blue-600 dark:hover:text-white transition-colors cursor-pointer"
+                    >
+                      {proj.name}
+                    </button>
+                    <div className="text-[10px] text-slate-400 font-normal">{proj.category}</div>
+                  </TableCell>
+
+                  {/* 3. Klien */}
+                  <TableCell className="text-slate-600 dark:text-zinc-400 whitespace-nowrap">
+                    {proj.client}
+                  </TableCell>
+
+                  {/* 4. Project Manager */}
+                  <TableCell className="text-slate-800 dark:text-zinc-200 whitespace-nowrap">
+                    {proj.manager}
+                  </TableCell>
+
+                  {/* 5. Progress */}
+                  <TableCell className="whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <div className="w-16 bg-slate-100 dark:bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${
+                            proj.progress === 100
+                              ? 'bg-slate-400 dark:bg-white'
+                              : proj.status === 'Terlambat'
+                              ? 'bg-rose-500 dark:bg-zinc-500'
+                              : 'bg-blue-600 dark:bg-zinc-300'
+                          }`}
+                          style={{ width: `${proj.progress}%` }} 
+                        />
+                      </div>
+                      <span className="font-mono text-slate-700 dark:text-zinc-300 text-[11px]">
+                        {proj.progress}%
+                      </span>
+                    </div>
+                  </TableCell>
+
+                  {/* 6. Anggaran */}
+                  <TableCell className="font-mono font-medium text-slate-800 dark:text-zinc-200 whitespace-nowrap">
+                    {formatIDR(proj.budget)}
+                  </TableCell>
+
+                  {/* 7. Biaya Aktual */}
+                  <TableCell className="font-mono font-medium whitespace-nowrap">
+                    <span className={proj.actualCost > proj.budget ? 'text-rose-600 dark:text-zinc-300' : 'text-slate-800 dark:text-zinc-200'}>
+                      {formatIDR(proj.actualCost)}
+                    </span>
+                  </TableCell>
+
+                  {/* 8. Status */}
+                  <TableCell className="whitespace-nowrap">
+                    <TablePill variant={proj.status === 'Selesai' ? 'success' : proj.status === 'Terlambat' ? 'warning' : 'process'}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${proj.status === 'Selesai' ? 'bg-emerald-500 dark:bg-white' : proj.status === 'Terlambat' ? 'bg-rose-500 dark:bg-zinc-500' : 'bg-blue-500 dark:bg-zinc-300'}`} />
+                      <span>{proj.status}</span>
+                    </TablePill>
+                  </TableCell>
+
+                  {/* 9. Tanggal Mulai */}
+                  <TableCell className="text-slate-500 dark:text-zinc-400 whitespace-nowrap text-[11px]">
+                    {new Date(proj.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </TableCell>
+
+                  {/* 10. Deadline */}
+                  <TableCell className="text-slate-500 dark:text-zinc-400 whitespace-nowrap text-[11px]">
+                    {new Date(proj.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </TableCell>
+
+                  {/* 11. Aksi (Detail, Edit, Hapus) */}
+                  <TableCell className="text-right whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => onSelectProject(proj)}
-                        className="text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        title="Lihat Detail Proyek"
+                        className="p-1 rounded text-slate-400 hover:text-blue-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                       >
-                        {proj.name}
+                        <Eye className="w-3.5 h-3.5" />
                       </button>
-                      <div className="text-[10px] text-slate-400 font-normal">{proj.category}</div>
-                    </td>
-
-                    {/* 3. Klien */}
-                    <td className="py-4 px-4 text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">
-                      {proj.client}
-                    </td>
-
-                    {/* 4. Project Manager */}
-                    <td className="py-4 px-4 text-slate-800 dark:text-slate-200 font-medium whitespace-nowrap">
-                      {proj.manager}
-                    </td>
-
-                    {/* 5. Progress */}
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full ${
-                              proj.progress === 100
-                                ? 'bg-slate-300 dark:bg-[#E5E7EB]'
-                                : proj.status === 'Terlambat'
-                                ? 'bg-rose-500'
-                                : 'bg-blue-600'
-                            }`}
-                            style={{ width: `${proj.progress}%` }} 
-                          />
-                        </div>
-                        <span className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">
-                          {proj.progress}%
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* 6. Anggaran */}
-                    <td className="py-4 px-4 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
-                      {formatIDR(proj.budget)}
-                    </td>
-
-                    {/* 7. Biaya Aktual */}
-                    <td className="py-4 px-4 font-semibold whitespace-nowrap">
-                      <span className={proj.actualCost > proj.budget ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-200'}>
-                        {formatIDR(proj.actualCost)}
-                      </span>
-                    </td>
-
-                    {/* 8. Status */}
-                    <td className="py-4 px-4 whitespace-nowrap">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(proj.status)}`}>
-                        {proj.status}
-                      </span>
-                    </td>
-
-                    {/* 9. Tanggal Mulai */}
-                    <td className="py-4 px-4 text-slate-500 whitespace-nowrap font-medium">
-                      {new Date(proj.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-
-                    {/* 10. Deadline */}
-                    <td className="py-4 px-4 text-slate-500 whitespace-nowrap font-medium">
-                      {new Date(proj.deadline).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </td>
-
-                    {/* 11. Aksi (Detail, Edit, Hapus) */}
-                    <td className="py-4 px-4 text-right whitespace-nowrap relative">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => onSelectProject(proj)}
-                          title="Lihat Detail Proyek"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => onEditProject(proj)}
-                          title="Edit Proyek"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm(`Yakin ingin menghapus proyek "${proj.name}"?`)) {
-                              onDeleteProject(proj.id);
-                            }
-                          }}
-                          title="Hapus Proyek"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                      <button
+                        onClick={() => onEditProject(proj)}
+                        title="Edit Proyek"
+                        className="p-1 rounded text-slate-400 hover:text-blue-500 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`Yakin ingin menghapus proyek "${proj.name}"?`)) {
+                            onDeleteProject(proj.id);
+                          }
+                        }}
+                        title="Hapus Proyek"
+                        className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
 
         {/* Pagination Footer */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">

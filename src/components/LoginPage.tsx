@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -19,33 +18,26 @@ export const LoginPage: React.FC<LoginPageProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(expiredMessage || '');
+  const [infoMessage, setInfoMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isTrialLoading, setIsTrialLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (expiredMessage) {
       setError(expiredMessage);
     }
   }, [expiredMessage]);
 
-  // Validasi format email
   const isValidEmail = (val: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-  };
-
-  // Generate hardware / browser fingerprint sederhana
-  const getDeviceFingerprint = () => {
-    let fp = localStorage.getItem('glace_device_fp');
-    if (!fp) {
-      fp = 'fp_' + Math.random().toString(36).substring(2, 12) + '_' + navigator.userAgent.replace(/\D/g, '').slice(0, 8);
-      localStorage.setItem('glace_device_fp', fp);
-    }
-    return fp;
   };
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
 
     if (!email.trim()) {
       setError('Email wajib diisi.');
@@ -53,17 +45,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     }
 
     if (!isValidEmail(email.trim())) {
-      setError('Format email tidak valid (contoh: user@glace.id).');
+      setError('Format email tidak valid.');
       return;
     }
 
     if (!password) {
-      setError('Password wajib diisi.');
+      setError('Kata sandi wajib diisi.');
       return;
     }
 
     if (password.length < 6) {
-      setError('Password minimal harus memiliki 6 karakter.');
+      setError('Kata sandi minimal 6 karakter.');
       return;
     }
 
@@ -72,13 +64,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setTimeout(() => {
       setIsLoading(false);
       onLoginSuccess(email.trim(), false);
-    }, 450);
+    }, 400);
   };
 
-  // Integrasi Google OAuth 2.0 Resmi
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError('');
+    setInfoMessage('');
 
     try {
       const res = await fetch('http://localhost:3001/api/auth/google/url');
@@ -86,318 +78,285 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
       if (!res.ok || !data.success || !data.url) {
         setIsLoading(false);
-        setError(data.message || 'Google OAuth belum dikonfigurasi. Silakan isi GOOGLE_CLIENT_ID & SECRET di .env.');
+        setError(data.message || 'Konfigurasi Google OAuth belum tersedia di backend (.env).');
         return;
       }
 
-      // Arahkan browser pengguna langsung ke halaman autentikasi resmi Google
       window.location.href = data.url;
     } catch (err: any) {
       setIsLoading(false);
-      setError('Gagal menghubungi backend Google OAuth: ' + (err.message || 'Periksa server.ts'));
+      setError('Koneksi backend Google OAuth gagal.');
     }
   };
 
-  // Handler GitHub OAuth (memeriksa ketersediaan backend dan kredensial)
-  const handleGitHubSignIn = async () => {
+  const handleAppleSignIn = async () => {
     setIsLoading(true);
     setError('');
+    setInfoMessage('');
 
     try {
-      const res = await fetch('http://localhost:3001/api/auth/github/url');
+      const res = await fetch('http://localhost:3001/api/auth/apple/url');
       if (!res.ok) {
-        throw new Error('Endpoint GitHub OAuth belum aktif di server backend.');
+        throw new Error('Apple Sign-In belum tersedia di backend.');
       }
       const data = await res.json();
 
       if (!data.success || !data.url) {
         setIsLoading(false);
-        setError(data.message || 'GitHub OAuth belum dikonfigurasi di server backend (.env).');
+        setError(data.message || 'Kredensial Apple Developer diperlukan di backend.');
         return;
       }
 
       window.location.href = data.url;
     } catch (err: any) {
       setIsLoading(false);
-      setError(
-        'GitHub OAuth backend belum siap: Silakan tambahkan endpoint /api/auth/github/url dan kredensial GITHUB_CLIENT_ID di server.ts.'
-      );
+      setError('Apple Sign-In belum dikonfigurasi. Gunakan Google atau Email.');
     }
   };
 
-  // Handler tombol "Start Free Trial – 3 Days"
-  const handleStartFreeTrial = async () => {
-    setIsTrialLoading(true);
-    setError('');
-
-    try {
-      const fingerprint = getDeviceFingerprint();
-      const res = await fetch('http://localhost:3001/api/trial/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fingerprint })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setError(data.message || 'Masa Free Trial 3 hari Anda telah berakhir.');
-        setIsTrialLoading(false);
-        return;
-      }
-
-      setIsTrialLoading(false);
-      onLoginSuccess(data.user.email, true, data);
-    } catch (err) {
-      setIsTrialLoading(false);
-      const fallbackTrial = {
-        user: {
-          id: 'trial_' + Date.now().toString(36),
-          email: 'trial.engineer@glace.id',
-          name: 'Trial Engineer',
-          role: 'Free Trial',
-          trialExpiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        timeLeft: {
-          displayText: 'Free Trial: 3 Days Left',
-          days: 3
-        }
-      };
-      onLoginSuccess(fallbackTrial.user.email, true, fallbackTrial);
+  const handleForgotPasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail || !isValidEmail(forgotEmail)) {
+      setError('Masukkan alamat email yang valid.');
+      return;
     }
+    setForgotSent(true);
+    setTimeout(() => {
+      setShowForgotModal(false);
+      setForgotSent(false);
+      setInfoMessage(`Tautan pemulihan dikirim ke ${forgotEmail}`);
+    }, 1200);
   };
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2 bg-[#090a0d] text-slate-100 font-sans selection:bg-blue-600 selection:text-white">
-      {/* =========================================================================
-          KOLOM KIRI: Form Login Resmi shadcn login-02
-          ========================================================================= */}
-      <div className="flex flex-col gap-4 p-6 md:p-10 justify-between relative z-10 bg-[#0c0d12]">
-        {/* Header Bar: Brand Logo & Tombol Kembali */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onGoToLanding}
-            className="flex items-center gap-2.5 font-bold tracking-tight text-white group cursor-pointer focus:outline-none"
-          >
-            <div className="flex size-7 items-center justify-center rounded-lg bg-white text-black font-black text-xs shadow-md">
-              <span className="italic">//</span>
-            </div>
-            <span className="text-base tracking-wider">GLACE</span>
-          </button>
+    <div className="min-h-screen bg-[#141518] text-zinc-100 flex flex-col items-center justify-center p-4 selection:bg-zinc-700 selection:text-white font-sans">
+      
+      {/* Brand Badge */}
+      <button 
+        type="button" 
+        onClick={onGoToLanding}
+        className="flex items-center gap-2 mb-4 px-3 py-1 rounded-md bg-[#1d1f24] border border-[#2b2e36] text-white hover:bg-[#252830] transition-colors cursor-pointer"
+        title="Kembali ke Beranda"
+      >
+        <div className="w-4 h-4 rounded bg-white text-black flex items-center justify-center font-black text-[10px] italic">
+          //
+        </div>
+        <span className="text-xs font-semibold tracking-wide text-white">GLACE</span>
+      </button>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onGoToLanding}
-            className="text-xs text-slate-400 hover:text-white hover:bg-slate-800/60 rounded-full px-3 py-1.5 h-auto transition-colors flex items-center gap-1.5 cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali</span>
-          </Button>
+      {/* Main Container */}
+      <div className="w-full max-w-[380px] bg-[#0d0e11] border border-[#23262d] rounded-xl p-6 sm:p-7 shadow-xl space-y-5">
+        
+        {/* Title */}
+        <div className="text-center space-y-1">
+          <h1 className="text-lg font-semibold tracking-tight text-white">
+            Selamat datang kembali
+          </h1>
+          <p className="text-xs text-zinc-400">
+            Masuk menggunakan akun Apple atau Google Anda.
+          </p>
         </div>
 
-        {/* Center Form Container */}
-        <div className="flex flex-1 items-center justify-center py-6">
-          <div className="w-full max-w-sm space-y-6">
-            {/* Title & Subtitle */}
-            <div className="flex flex-col items-center gap-2 text-center">
-              <h1 className="text-2xl font-bold tracking-tight text-white">
-                Login to your account
-              </h1>
-              <p className="text-sm text-slate-400">
-                Enter your email below to login to your account
-              </p>
-            </div>
+        {/* Status Alerts */}
+        {error && (
+          <div className="p-2.5 rounded-md bg-zinc-900 border border-zinc-700 text-white text-xs flex items-center justify-between">
+            <span>{error}</span>
+            <button 
+              type="button" 
+              onClick={() => setError('')} 
+              className="text-zinc-400 hover:text-white ml-2 text-sm leading-none cursor-pointer"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-medium flex items-center justify-between">
-                <span>{error}</span>
-                <button 
-                  type="button" 
-                  onClick={() => setError('')} 
-                  className="text-rose-400 hover:text-rose-200 ml-2 cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
+        {infoMessage && (
+          <div className="p-2.5 rounded-md bg-zinc-900 border border-zinc-700 text-white text-xs flex items-center justify-between">
+            <span>{infoMessage}</span>
+            <button 
+              type="button" 
+              onClick={() => setInfoMessage('')} 
+              className="text-zinc-400 hover:text-white ml-2 text-sm leading-none cursor-pointer"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
-            {/* Form */}
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <label 
-                  htmlFor="email" 
-                  className="text-xs font-medium text-slate-300 block"
-                >
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error) setError('');
-                  }}
-                  placeholder="m@example.com"
-                  required
-                  className="h-10 bg-slate-900/80 border-slate-800 text-slate-100 placeholder:text-slate-500 rounded-lg text-xs focus-visible:border-slate-500 focus-visible:ring-1 focus-visible:ring-slate-400"
-                />
-              </div>
+        {/* OAuth Buttons */}
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={handleAppleSignIn}
+            disabled={isLoading}
+            className="w-full h-9 px-3 rounded-md bg-[#17181d] border border-[#262830] hover:border-[#353844] hover:bg-[#1d1f25] text-white text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 170 170">
+              <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.69-7.79-11.97-14.24-6.42-9.68-11.45-20.73-15.09-33.15-3.64-12.42-5.46-24.03-5.46-34.83 0-14.65 3.73-26.69 11.19-36.12 7.46-9.43 16.71-14.25 27.76-14.46 4.9.11 10.37 1.34 16.42 3.69 6.05 2.35 10.15 3.58 12.3 3.69 1.74-.11 6.04-1.4 12.91-3.88 6.87-2.48 12.44-3.61 16.71-3.39 12.83 1.09 23.01 5.88 30.55 14.37-11.09 6.74-16.52 16.09-16.31 28.05.22 9.35 3.78 17.18 10.67 23.49 6.89 6.31 15.11 9.9 24.67 10.77-2.61 7.83-5.77 15.54-9.49 23.13zM119.22 33.02c0-7.39 2.66-14.34 7.99-20.85 5.33-6.52 11.83-10.73 19.5-12.64 1.09 7.39-1.08 14.62-6.52 21.69-5.44 7.07-11.82 11.23-19.14 12.47-.43-.22-.9-.33-1.83-.67z" />
+            </svg>
+            <span className="text-white">Masuk dengan Apple</span>
+          </button>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label 
-                    htmlFor="password" 
-                    className="text-xs font-medium text-slate-300 block"
-                  >
-                    Password
-                  </label>
-                  <Button 
-                    type="button" 
-                    variant="link"
-                    onClick={() => {}}
-                    className="p-0 h-auto text-xs text-slate-400 hover:text-white underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </Button>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    if (error) setError('');
-                  }}
-                  placeholder="••••••••"
-                  required
-                  className="h-10 bg-slate-900/80 border-slate-800 text-slate-100 placeholder:text-slate-500 rounded-lg text-xs focus-visible:border-slate-500 focus-visible:ring-1 focus-visible:ring-slate-400"
-                />
-              </div>
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+            className="w-full h-9 px-3 rounded-md bg-[#17181d] border border-[#262830] hover:border-[#353844] hover:bg-[#1d1f25] text-white text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            <span className="text-white">Masuk dengan Google</span>
+          </button>
+        </div>
 
-              {/* Login Button Utama */}
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-10 bg-white hover:bg-slate-200 text-slate-900 font-semibold text-xs rounded-lg transition-colors cursor-pointer shadow-sm disabled:opacity-60"
+        {/* Divider */}
+        <div className="relative flex items-center justify-center my-2">
+          <div className="w-full border-t border-[#23262d]" />
+          <span className="absolute bg-[#0d0e11] px-2.5 text-[11px] text-zinc-500 whitespace-nowrap">
+            Atau lanjutkan dengan
+          </span>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSignIn} className="space-y-3.5">
+          <div className="space-y-1">
+            <label 
+              htmlFor="email" 
+              className="text-xs font-medium text-zinc-300 block"
+            >
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError('');
+              }}
+              placeholder="m@example.com"
+              required
+              className="h-9 bg-[#14151a] border-[#242730] text-zinc-100 placeholder:text-zinc-600 rounded-md text-xs focus-visible:border-zinc-400"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label 
+                htmlFor="password" 
+                className="text-xs font-medium text-zinc-300 block"
               >
-                {isLoading ? 'Logging in...' : 'Login'}
-              </Button>
+                Kata Sandi
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotEmail(email);
+                  setShowForgotModal(true);
+                }}
+                className="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                Lupa kata sandi Anda?
+              </button>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (error) setError('');
+              }}
+              placeholder="••••••••"
+              required
+              className="h-9 bg-[#14151a] border-[#242730] text-zinc-100 placeholder:text-zinc-600 rounded-md text-xs focus-visible:border-zinc-400"
+            />
+          </div>
 
-              {/* Divider: Or continue with */}
-              <div className="relative my-4 flex items-center justify-center">
-                <div className="w-full border-t border-slate-800" />
-                <span className="absolute bg-[#0c0d12] px-3 text-[11px] text-slate-500 uppercase tracking-wider">
-                  Or continue with
-                </span>
-              </div>
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-9 bg-white hover:bg-zinc-100 text-black font-semibold text-xs rounded-md transition-colors cursor-pointer disabled:opacity-50 mt-1 shadow-xs"
+          >
+            {isLoading ? 'Memproses...' : 'Masuk'}
+          </Button>
+        </form>
 
-              {/* Social Login Buttons Container */}
-              <div className="space-y-2">
-                {/* 1. Google OAuth Button */}
+        {/* Link to Sign up */}
+        <div className="text-center text-xs text-zinc-400 pt-0.5">
+          Belum punya akun?{' '}
+          <button
+            type="button"
+            onClick={onGoToSignUp}
+            className="text-white hover:underline underline-offset-4 font-medium cursor-pointer"
+          >
+            Daftar sekarang
+          </button>
+        </div>
+      </div>
+
+      {/* Footer Info */}
+      <div className="mt-6 text-center text-xs text-zinc-500 max-w-sm px-4 leading-relaxed">
+        Dengan mengklik lanjutkan, Anda menyetujui{' '}
+        <span 
+          onClick={onGoToLanding}
+          className="text-zinc-400 underline underline-offset-4 hover:text-zinc-200 cursor-pointer"
+        >
+          Ketentuan Layanan
+        </span>{' '}
+        dan{' '}
+        <span 
+          onClick={onGoToLanding}
+          className="text-zinc-400 underline underline-offset-4 hover:text-zinc-200 cursor-pointer"
+        >
+          Kebijakan Privasi
+        </span>{' '}
+        kami .
+      </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-[#111216] border border-[#262831] rounded-lg max-w-sm w-full p-5 space-y-3.5 shadow-2xl">
+            <h3 className="text-sm font-semibold text-white">Reset Kata Sandi</h3>
+            <p className="text-xs text-zinc-400">
+              Masukkan email akun Anda untuk menerima instruksi pemulihan.
+            </p>
+            <form onSubmit={handleForgotPasswordSubmit} className="space-y-3">
+              <Input
+                type="email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="nama@email.com"
+                required
+                className="h-8 bg-[#16171d] border-[#2b2d37] text-xs text-white rounded-md"
+              />
+              <div className="flex items-center justify-end gap-2 pt-1">
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={handleGoogleSignIn}
-                  disabled={isLoading}
-                  className="w-full h-10 bg-slate-900/90 border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+                  variant="ghost"
+                  onClick={() => setShowForgotModal(false)}
+                  className="h-7 text-xs text-zinc-400 hover:text-white"
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-                  </svg>
-                  <span>Login with Google</span>
+                  Batal
                 </Button>
-
-                {/* 2. GitHub OAuth Button (Resmi block shadcn login-02) */}
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleGitHubSignIn}
-                  disabled={isLoading}
-                  className="w-full h-10 bg-slate-900/90 border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-200 text-xs font-medium rounded-lg flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+                  type="submit"
+                  disabled={forgotSent}
+                  className="h-7 text-xs bg-white text-black hover:bg-zinc-200 rounded-md font-medium"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    className="w-4 h-4"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                    />
-                  </svg>
-                  <span>Login with GitHub</span>
+                  {forgotSent ? 'Mengirim...' : 'Kirim Tautan'}
                 </Button>
               </div>
             </form>
-
-            {/* Don't have an account? Sign up */}
-            <div className="text-center text-xs text-slate-400 pt-1">
-              Don&apos;t have an account?{' '}
-              <Button 
-                type="button" 
-                variant="link"
-                onClick={onGoToSignUp}
-                className="text-white hover:underline underline-offset-4 font-semibold p-0 h-auto text-xs"
-              >
-                Sign up
-              </Button>
-            </div>
           </div>
         </div>
-
-        {/* Footer info */}
-        <div className="text-center text-[11px] text-slate-500">
-          By signing in, you agree to our{' '}
-          <span className="text-slate-400 hover:underline cursor-pointer">Terms of Service</span> and{' '}
-          <span className="text-slate-400 hover:underline cursor-pointer">Privacy Policy</span>.
-        </div>
-      </div>
-
-      {/* =========================================================================
-          KOLOM KANAN: Cover Image & Industrial Branding GLACE
-          ========================================================================= */}
-      <div className="relative hidden bg-[#060709] lg:block overflow-hidden border-l border-slate-800/50">
-        {/* Cover Image Background (Gambar Arsitektural / Gelombang Monokrom) */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-85 mix-blend-luminosity scale-105"
-          style={{
-            backgroundImage: `url('/login-cover.jpg')`,
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/60" />
-        <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/70" />
-
-        {/* GLACE Center Watermark Branding */}
-        <div className="relative z-10 h-full p-12 lg:p-16 flex flex-col justify-between">
-          <div className="flex justify-end">
-            <span className="text-xs font-mono uppercase tracking-widest text-slate-500 border border-slate-800 px-3 py-1 rounded-full bg-black/40 backdrop-blur-xs">
-              ENGINEERING // V2.0
-            </span>
-          </div>
-
-          <div className="max-w-lg my-auto space-y-4">
-            <div className="size-14 rounded-2xl bg-white text-black flex items-center justify-center font-black tracking-tighter text-3xl shadow-2xl">
-              <span className="italic">//</span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-              GLACE
-            </h2>
-            <p className="text-slate-300 text-sm sm:text-base font-normal leading-relaxed">
-              The Next-Gen Unified AI Engineering Workspace for Civil, Electrical, Mechanical & Infrastructure Intelligence.
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

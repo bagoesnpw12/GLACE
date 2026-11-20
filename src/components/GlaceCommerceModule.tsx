@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { 
   Users, 
   Box, 
@@ -7,23 +7,9 @@ import {
   Search, 
   Filter, 
   Eye, 
-  ArrowRight,
-  Send,
-  CheckCircle2,
   X,
-  ShoppingCart,
   ChevronDown,
-  Layers,
-  Sparkles,
-  Zap,
-  Cpu,
-  Server,
-  Shield,
-  Gauge,
-  Cable,
-  Wrench,
-  ExternalLink,
-  Plus
+  CheckCircle2
 } from 'lucide-react';
 import { 
   CommerceProduct, 
@@ -50,7 +36,7 @@ interface CommerceProps {
 
 export const GlaceCommerceModule: React.FC<CommerceProps> = ({ 
   onAddActivity,
-  selectedSubItem,
+  selectedSubItem = '',
   onSelectSubItem 
 }) => {
   // Shared state across all Commerce Submodules
@@ -83,12 +69,12 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     { id: 'safety', name: 'Safety & Tools' },
   ];
 
-  // Data Dummy Katalog Produk persis sesuai Gambar dan Ketentuan Prompt
+  // Data Katalog Produk persis sesuai Gambar Referensi 1 Kiri
   const initialProducts = [
     {
       id: 'prd-01',
       brand: 'SCHNEIDER',
-      brandColor: 'text-emerald-600',
+      brandColor: 'text-emerald-600 dark:text-emerald-400',
       title: 'MCB 1P 6A',
       sku: 'SKU-MCB-001',
       price: 'Rp 85.000',
@@ -102,7 +88,7 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     {
       id: 'prd-02',
       brand: 'ABB',
-      brandColor: 'text-red-600',
+      brandColor: 'text-red-600 dark:text-red-400',
       title: 'Trafo Distribusi 250 kVA',
       sku: 'SKU-TRF-002',
       price: 'Rp 185.000.000',
@@ -116,8 +102,8 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     {
       id: 'prd-03',
       brand: 'Prysmian',
-      brandColor: 'text-slate-800 dark:text-slate-200',
-      title: 'Kabel NYY 3x2.5 mm\u00B2',
+      brandColor: 'text-slate-800 dark:text-zinc-200',
+      title: 'Kabel NYY 3x2.5 mm²',
       sku: 'SKU-KBL-003',
       price: 'Rp 25.000 / m',
       numericPrice: 25000,
@@ -130,7 +116,7 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     {
       id: 'prd-04',
       brand: 'SCHNEIDER',
-      brandColor: 'text-emerald-600',
+      brandColor: 'text-emerald-600 dark:text-emerald-400',
       title: 'Panel Listrik 400A',
       sku: 'SKU-PNL-004',
       price: 'Rp 12.500.000',
@@ -144,7 +130,7 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     {
       id: 'prd-05',
       brand: 'Himel',
-      brandColor: 'text-blue-600',
+      brandColor: 'text-blue-600 dark:text-blue-400',
       title: 'KWH Meter Digital',
       sku: 'SKU-MTR-005',
       price: 'Rp 450.000',
@@ -157,40 +143,40 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     }
   ];
 
-  // Penawaran Diterima Dummy
+  // Penawaran Diterima Dummy persis sesuai Referensi 1 Kiri
   const dummyQuotations = [
     {
       no: 1,
       rfqCode: 'RFQ-2026-001',
       supplier: 'Schneider Electric',
-      total: 'Rp 12.500.000',
+      total: 'Rp 12.800.000',
       date: '10 Okt 2026',
-      deliveryTime: '5 Hari Kerja',
-      status: 'Quotation Valid'
+      deliveryTime: '2-3 Hari Kerja',
+      status: 'Reviewed'
     },
     {
       no: 2,
       rfqCode: 'RFQ-2026-002',
       supplier: 'ABB Indonesia',
-      total: 'Rp 185.000.000',
+      total: 'Rp 195.000.000',
       date: '8 Okt 2026',
       deliveryTime: '7 Hari Kerja',
-      status: 'Quotation Valid'
+      status: 'Reviewed'
     },
     {
       no: 3,
       rfqCode: 'RFQ-2026-003',
       supplier: 'Prysmian',
-      total: 'Rp 25.000.000',
+      total: 'Rp 25.800.000',
       date: '5 Okt 2026',
-      deliveryTime: '3 Hari Kerja',
-      status: 'Accepted'
+      deliveryTime: '24 Jam',
+      status: 'Reviewed'
     },
     {
       no: 4,
       rfqCode: 'RFQ-2026-005',
       supplier: 'Siemens',
-      total: 'Rp 9.800.000',
+      total: 'Rp 8.880.000',
       date: '1 Okt 2026',
       deliveryTime: '4 Hari Kerja',
       status: 'Reviewed'
@@ -214,7 +200,7 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
 
     setRfqList(prev => [created, ...prev]);
     onAddActivity(`Membuat RFQ baru: ${created.rfqNumber} - ${created.title}`, 'Glace Commerce');
-    setRfqSuccessToast(`RFQ "${created.rfqNumber}" berhasil dibuat dan ditambahkan ke antrean.`);
+    setRfqSuccessToast(`RFQ "${created.rfqNumber}" berhasil dibuat.`);
     setTimeout(() => setRfqSuccessToast(null), 4000);
   };
 
@@ -287,54 +273,28 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     setMarketplaceProducts(prev => prev.map(item => item.id === id ? { ...item, isWishlist: !item.isWishlist } : item));
   };
 
-  // Filter Logika Katalog Produk Dashboard
-  const filteredProducts = useMemo(() => {
-    return initialProducts.filter(p => {
-      const matchSearch = 
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.sku.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredProducts = initialProducts.filter(p => {
+    const matchSearch = 
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.sku.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchCategoryTag = 
-        activeCategory === 'Semua' ? true : p.category.toLowerCase().includes(activeCategory.toLowerCase());
+    const matchCategoryTag = 
+      activeCategory === 'Semua' ? true : p.category.toLowerCase().includes(activeCategory.toLowerCase());
 
-      const matchCategoryDrop = 
-        selectedCategoryDropdown === 'Semua' ? true : p.category.toLowerCase().includes(selectedCategoryDropdown.toLowerCase());
+    const matchCategoryDrop = 
+      selectedCategoryDropdown === 'Semua' ? true : p.category.toLowerCase().includes(selectedCategoryDropdown.toLowerCase());
 
-      const matchBrand = 
-        selectedBrand === 'Semua' ? true : p.brand.toLowerCase() === selectedBrand.toLowerCase();
+    const matchBrand = 
+      selectedBrand === 'Semua' ? true : p.brand.toLowerCase() === selectedBrand.toLowerCase();
 
-      return matchSearch && matchCategoryTag && matchCategoryDrop && matchBrand;
-    });
-  }, [initialProducts, searchQuery, activeCategory, selectedCategoryDropdown, selectedBrand]);
-
-  const handleRequestQuote = (prod: any) => {
-    handleAddRFQ({
-      title: `Pengadaan ${prod.title} (${prod.brand})`,
-      itemsCount: 1,
-      supplier: prod.brand,
-      totalEstimated: prod.price,
-      status: 'Menunggu',
-      date: '20 November 2026'
-    });
-    setSelectedProduct(null);
-  };
+    return matchSearch && matchCategoryTag && matchCategoryDrop && matchBrand;
+  });
 
   // ROUTING VIEW BERDASARKAN selectedSubItem DARI SIDEBAR
   if (selectedSubItem === 'Marketplace') {
     return (
       <div className="space-y-6">
-        {rfqSuccessToast && (
-          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 shadow-sm animate-fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">{rfqSuccessToast}</span>
-            </div>
-            <button onClick={() => setRfqSuccessToast(null)} className="text-emerald-700 hover:opacity-75">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
         <GCMarketplaceView 
           products={marketplaceProducts}
           onRequestRFQ={(prod: CommerceProduct) => {
@@ -356,17 +316,6 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
   if (selectedSubItem === 'AI Procurement') {
     return (
       <div className="space-y-6">
-        {rfqSuccessToast && (
-          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 shadow-sm animate-fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">{rfqSuccessToast}</span>
-            </div>
-            <button onClick={() => setRfqSuccessToast(null)} className="text-emerald-700 hover:opacity-75">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
         <GCAIProcurementView 
           onCreateRFQFromProcurement={(rec: { title: string; supplier: string; itemsCount: number; estimatedPrice: string }) => {
             handleAddRFQ({
@@ -386,17 +335,6 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
   if (selectedSubItem === 'Search by Image') {
     return (
       <div className="space-y-6">
-        {rfqSuccessToast && (
-          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 shadow-sm animate-fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">{rfqSuccessToast}</span>
-            </div>
-            <button onClick={() => setRfqSuccessToast(null)} className="text-emerald-700 hover:opacity-75">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
         <GCSearchByImageView 
           onCreateRFQFromImageSearch={(item: { title: string; supplier: string; price: string }) => {
             handleAddRFQ({
@@ -416,17 +354,6 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
   if (selectedSubItem === 'RFQ') {
     return (
       <div className="space-y-6">
-        {rfqSuccessToast && (
-          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 shadow-sm animate-fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">{rfqSuccessToast}</span>
-            </div>
-            <button onClick={() => setRfqSuccessToast(null)} className="text-emerald-700 hover:opacity-75">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
         <GCRFQView 
           rfqList={rfqList}
           onAddRFQ={handleAddRFQ}
@@ -440,17 +367,6 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
   if (selectedSubItem === 'Purchase Orders') {
     return (
       <div className="space-y-6">
-        {rfqSuccessToast && (
-          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 shadow-sm animate-fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">{rfqSuccessToast}</span>
-            </div>
-            <button onClick={() => setRfqSuccessToast(null)} className="text-emerald-700 hover:opacity-75">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
         <GCPurchaseOrdersView 
           poList={poList}
           onCreatePO={handleCreatePO}
@@ -465,17 +381,6 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
   if (selectedSubItem === 'Orders') {
     return (
       <div className="space-y-6">
-        {rfqSuccessToast && (
-          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 shadow-sm animate-fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="font-medium">{rfqSuccessToast}</span>
-            </div>
-            <button onClick={() => setRfqSuccessToast(null)} className="text-emerald-700 hover:opacity-75">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
         <GCOrdersView 
           orderList={orderList}
           onUpdateOrderStatus={handleUpdateOrderStatus}
@@ -484,112 +389,87 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
     );
   }
 
-  // DEFAULT VIEW: GLACE COMMERCE OVERVIEW DASHBOARD
+  // DEFAULT VIEW: GLACE COMMERCE OVERVIEW (Persis Referensi 1 Kiri)
   return (
     <div className="space-y-6">
       {/* Toast Notifikasi Sukses */}
       {rfqSuccessToast && (
-        <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 dark:text-emerald-300 shadow-sm animate-in fade-in duration-200">
+        <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center justify-between gap-3 text-xs text-emerald-800 dark:text-emerald-300 shadow-2xs">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="font-medium">{rfqSuccessToast}</span>
           </div>
           <button 
             onClick={() => setRfqSuccessToast(null)}
-            className="text-emerald-700 dark:text-emerald-400 hover:opacity-75"
+            className="text-emerald-700 dark:text-emerald-400 hover:opacity-75 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
-      {/* Title */}
+      {/* Header Bar */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Glace Commerce</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Platform Pengadaan Komponen Teknik, Alat Industri, dan Manajemen Pengadaan AI</p>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-zinc-100">
+          Glace Commerce
+        </h1>
       </div>
 
-      {/* Submenu Quick Navigation Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-        <span className="text-xs font-semibold text-gray-400 mr-2">Modul Commerce:</span>
-        {[
-          { label: 'Overview', sub: '' },
-          { label: 'Marketplace', sub: 'Marketplace' },
-          { label: 'AI Procurement', sub: 'AI Procurement' },
-          { label: 'Search by Image', sub: 'Search by Image' },
-          { label: 'RFQ', sub: 'RFQ' },
-          { label: 'Purchase Orders', sub: 'Purchase Orders' },
-          { label: 'Orders', sub: 'Orders' },
-        ].map((m) => (
-          <button
-            key={m.label}
-            onClick={() => onSelectSubItem && onSelectSubItem(m.sub)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
-              (selectedSubItem || '') === m.sub
-                ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Section 4: KPI Cards persis sesuai Screenshot referensi */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Metric KPI Cards (Persis Referensi 1 Kiri) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Users */}
-        <div className="bg-white dark:bg-[#13161f] rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total users</p>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">89,935</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total users</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">89,935</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center text-slate-400">
+          <div className="text-slate-400 dark:text-zinc-500">
             <Users className="w-5 h-5" />
           </div>
         </div>
 
         {/* Total Products */}
-        <div className="bg-white dark:bg-[#13161f] rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total products</p>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">23,283.5</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total products</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">23,283.5</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center text-slate-400">
+          <div className="text-slate-400 dark:text-zinc-500">
             <Box className="w-5 h-5" />
           </div>
         </div>
 
-        {/* Total Orders */}
-        <div className="bg-white dark:bg-[#13161f] rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-between">
+        {/* Total Users (Order count in UI) */}
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total users</p>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">46,827</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">Total users</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">46,827</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center text-slate-400">
+          <div className="text-slate-400 dark:text-zinc-500">
             <CheckCircle className="w-5 h-5" />
           </div>
         </div>
 
         {/* Refunded */}
-        <div className="bg-white dark:bg-[#13161f] rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex items-center justify-between">
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Refunded</p>
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">124,854</h3>
+            <span className="text-[11px] font-medium text-slate-500 dark:text-zinc-400">Refunded</span>
+            <div className="text-2xl font-bold text-slate-900 dark:text-zinc-100 mt-1">124,854</div>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/60 flex items-center justify-center text-slate-400">
+          <div className="text-slate-400 dark:text-zinc-500">
             <TrendingUp className="w-5 h-5" />
           </div>
         </div>
       </div>
 
-      {/* Section 5: Produk Unggulan & Filter Kategori persis sesuai Screenshot */}
-      <div className="bg-white dark:bg-[#13161f] rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
+      {/* Produk Unggulan & Category Pills (Persis Referensi 1 Kiri) */}
+      <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-5 shadow-2xs space-y-4">
         <div>
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">Produk Unggulan</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Produk pilihan untuk kebutuhan industri Anda.</p>
+          <h2 className="text-sm font-bold text-slate-900 dark:text-zinc-100">Produk Unggulan</h2>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">Produk pilihan untuk kebutuhan industri Anda.</p>
         </div>
 
-        {/* Category Pills Slider / Row persis sesuai Gambar */}
+        {/* Category Horizontal Slider */}
         <div className="flex items-center gap-3 overflow-x-auto pb-2 pt-1 no-scrollbar">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.name;
@@ -597,28 +477,28 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.name)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center rounded-2xl transition-all duration-200 ${
+                className={`shrink-0 flex flex-col items-center justify-center rounded-xl transition-all duration-200 cursor-pointer ${
                   cat.isIconGrid
                     ? isActive 
-                      ? 'w-24 h-24 bg-blue-600 text-white shadow-md shadow-blue-500/20' 
-                      : 'w-24 h-24 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:border-blue-400'
+                      ? 'w-20 h-20 bg-blue-600 dark:bg-zinc-100 dark:text-zinc-900 text-white shadow-2xs font-semibold' 
+                      : 'w-20 h-20 bg-white dark:bg-[#181a20] border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700'
                     : isActive
-                      ? 'h-24 px-5 bg-blue-600 text-white shadow-md shadow-blue-500/20 border-transparent font-semibold'
-                      : 'h-24 px-5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:border-slate-300'
+                      ? 'h-20 px-4 bg-blue-600 dark:bg-zinc-100 dark:text-zinc-900 text-white shadow-2xs font-semibold'
+                      : 'h-20 px-4 bg-white dark:bg-[#181a20] border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-700'
                 }`}
               >
                 {cat.isIconGrid ? (
                   <>
-                    <div className="grid grid-cols-2 gap-1 mb-2">
-                      <div className="w-2.5 h-2.5 rounded-sm bg-current opacity-90" />
-                      <div className="w-2.5 h-2.5 rounded-sm bg-current opacity-90" />
-                      <div className="w-2.5 h-2.5 rounded-sm bg-current opacity-90" />
-                      <div className="w-2.5 h-2.5 rounded-sm bg-current opacity-90" />
+                    <div className="grid grid-cols-2 gap-1 mb-1.5">
+                      <div className="w-2 h-2 rounded-xs bg-current opacity-90" />
+                      <div className="w-2 h-2 rounded-xs bg-current opacity-90" />
+                      <div className="w-2 h-2 rounded-xs bg-current opacity-90" />
+                      <div className="w-2 h-2 rounded-xs bg-current opacity-90" />
                     </div>
-                    <span className="text-xs font-semibold">{cat.name}</span>
+                    <span className="text-[11px] font-semibold">{cat.name}</span>
                   </>
                 ) : (
-                  <span className="text-xs text-center font-medium max-w-[100px] leading-snug">
+                  <span className="text-[11px] text-center font-medium max-w-[90px] leading-snug">
                     {cat.name}
                   </span>
                 )}
@@ -628,45 +508,43 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
         </div>
       </div>
 
-      {/* Section 6: Search & Filter Bar + Product Catalog Grid */}
+      {/* Search & Filter Bar + Product Cards Grid */}
       <div className="space-y-4">
-        {/* Search & Filter Header persis sesuai Screenshot */}
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Input Cari Produk */}
           <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
               placeholder="Cari produk..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-[#13161f] border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             {/* Filter Kategori Dropdown */}
-            <div className="relative flex-1 sm:w-36">
+            <div className="relative flex-1 sm:w-32">
               <select
                 value={selectedCategoryDropdown}
                 onChange={(e) => setSelectedCategoryDropdown(e.target.value)}
-                className="w-full appearance-none pl-3.5 pr-8 py-2.5 bg-white dark:bg-[#13161f] border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                className="w-full text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-zinc-300 focus:outline-none cursor-pointer"
               >
                 <option value="Semua">Kategori</option>
                 <option value="Electrical">Electrical</option>
-                <option value="Panel & Enclosure">Panel & Enclosure</option>
+                <option value="Panel & Enclosure">Panel</option>
                 <option value="Instrumentation">Instrumentation</option>
                 <option value="Cabling & Accessories">Cabling</option>
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             {/* Filter Brand Dropdown */}
-            <div className="relative flex-1 sm:w-36">
+            <div className="relative flex-1 sm:w-32">
               <select
                 value={selectedBrand}
                 onChange={(e) => setSelectedBrand(e.target.value)}
-                className="w-full appearance-none pl-3.5 pr-8 py-2.5 bg-white dark:bg-[#13161f] border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                className="w-full text-xs bg-white dark:bg-[#121316] border border-slate-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-slate-700 dark:text-zinc-300 focus:outline-none cursor-pointer"
               >
                 <option value="Semua">Brand</option>
                 <option value="SCHNEIDER">Schneider</option>
@@ -674,7 +552,6 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
                 <option value="Prysmian">Prysmian</option>
                 <option value="Himel">Himel</option>
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             {/* Tombol Filter */}
@@ -685,77 +562,67 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
                 setSelectedBrand('Semua');
                 setSearchQuery('');
               }}
-              className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white dark:bg-[#13161f] border border-slate-200/90 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-colors whitespace-nowrap"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] text-xs font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"
             >
-              <Filter className="w-3.5 h-3.5 text-slate-500" />
+              <Filter className="w-3 h-3 text-slate-400 dark:text-zinc-400" />
               <span>Filter</span>
             </button>
           </div>
         </div>
 
-        {/* 5 Product Grid Cards persis sesuai Screenshot referensi */}
+        {/* 5 Product Cards Grid (Persis Referensi 1 Kiri) */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {filteredProducts.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-slate-400 text-xs">
-              Tidak ada produk yang cocok dengan pencarian atau filter yang dipilih.
-            </div>
-          ) : (
-            filteredProducts.map((product) => (
-              <div 
-                key={product.id}
-                onClick={() => setSelectedProduct(product)}
-                className="bg-white dark:bg-[#13161f] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-md hover:border-blue-300 dark:hover:border-blue-900 transition-all duration-200 cursor-pointer flex flex-col justify-between group"
-              >
-                <div>
-                  {/* Brand Tag kecil di atas kiri kartu */}
-                  <span className={`text-[10px] font-bold tracking-wider uppercase ${product.brandColor}`}>
-                    {product.brand}
-                  </span>
+          {filteredProducts.map((product) => (
+            <div 
+              key={product.id}
+              onClick={() => setSelectedProduct(product)}
+              className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-4 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-700 transition-all duration-200 cursor-pointer flex flex-col justify-between group"
+            >
+              <div>
+                <span className={`text-[10px] font-bold tracking-wider uppercase ${product.brandColor}`}>
+                  {product.brand}
+                </span>
 
-                  {/* Dummy Visual Gambar Teknik Produk (SVG local aset) */}
-                  <div className="my-3 w-full h-32 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden p-3 group-hover:scale-[1.02] transition-transform">
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.title} 
-                      className="max-h-full max-w-full object-contain filter drop-shadow-sm"
-                      loading="lazy"
-                    />
-                  </div>
-
-                  {/* Product Title & SKU */}
-                  <h3 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 min-h-[32px]">
-                    {product.title}
-                  </h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    {product.sku}
-                  </p>
+                <div className="my-3 w-full h-28 rounded-lg bg-slate-50 dark:bg-[#181a20] border border-slate-100 dark:border-zinc-800/80 flex items-center justify-center overflow-hidden p-2 group-hover:scale-[1.02] transition-transform">
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.title} 
+                    className="max-h-full max-w-full object-contain"
+                    loading="lazy"
+                  />
                 </div>
 
-                {/* Price persis sesuai format screenshot */}
-                <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/60">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                    {product.price}
-                  </span>
-                </div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100 line-clamp-1">
+                  {product.title}
+                </h3>
+                <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5">
+                  {product.sku}
+                </p>
               </div>
-            ))
-          )}
+
+              <div className="mt-3 pt-2 border-t border-slate-100 dark:border-zinc-800/80">
+                <span className="text-xs font-bold text-slate-900 dark:text-zinc-100 block">
+                  {product.price}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Section 7 & 8: RFQ Terbaru & Penawaran Diterima persis sesuai Screenshot */}
+      {/* RFQ Terbaru & Penawaran Diterima (Persis Referensi 1 Kiri) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* RFQ Terbaru Card */}
-        <div className="bg-white dark:bg-[#13161f] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
+        {/* RFQ Terbaru */}
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-5 shadow-2xs space-y-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">RFQ Terbaru</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Daftar permintaan penawaran yang Anda buat.</p>
+            <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100">RFQ Terbaru</h3>
+            <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-0.5">Daftar permintaan penawaran yang Anda buat.</p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase border-b border-slate-100 dark:border-slate-800">
+                <tr className="border-b border-slate-100 dark:border-zinc-800/80 text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                   <th className="py-2.5 px-3">NO</th>
                   <th className="py-2.5 px-3">NAMA RFQ</th>
                   <th className="py-2.5 px-3 text-center">JUMLAH ITEM</th>
@@ -764,24 +631,24 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
                   <th className="py-2.5 px-3 text-center">AKSI</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+              <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
                 {rfqList.slice(0, 3).map((rfq, idx) => (
-                  <tr key={rfq.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-3 text-slate-400">{idx + 1}</td>
-                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">{rfq.rfqNumber}</td>
-                    <td className="py-3 px-3 text-center text-slate-600 dark:text-slate-300">{rfq.itemsCount}</td>
+                  <tr key={rfq.id} className="hover:bg-slate-50/60 dark:hover:bg-zinc-800/20 transition-colors">
+                    <td className="py-3 px-3 text-slate-400 dark:text-zinc-500 font-mono">{idx + 1}</td>
+                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-zinc-100">{rfq.rfqNumber}</td>
+                    <td className="py-3 px-3 text-center text-slate-600 dark:text-zinc-400">{rfq.itemsCount}</td>
                     <td className="py-3 px-3 text-center">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+                      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold ${
                         rfq.status === 'Menunggu'
-                          ? 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-950/40 dark:border-amber-800'
+                          ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'
                           : rfq.status === 'Diproses'
-                          ? 'bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800'
-                          : 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800'
+                          ? 'bg-blue-50 text-blue-600 dark:bg-zinc-800 dark:text-zinc-300'
+                          : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
                       }`}>
                         {rfq.status}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-slate-500 whitespace-nowrap">{rfq.date}</td>
+                    <td className="py-3 px-3 text-slate-500 dark:text-zinc-400 whitespace-nowrap">{rfq.date}</td>
                     <td className="py-3 px-3 text-center">
                       <button 
                         onClick={() => setSelectedRfqDetail({
@@ -792,10 +659,10 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
                           date: rfq.date,
                           notes: 'Spesifikasi telah diverifikasi tim teknik untuk memenuhi standar IEC/SPLN.'
                         })}
-                        className="text-blue-600 hover:text-blue-700 p-1"
+                        className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-200 p-1 cursor-pointer"
                         title="Lihat Detail"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>
@@ -805,17 +672,17 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
           </div>
         </div>
 
-        {/* Penawaran Diterima Card */}
-        <div className="bg-white dark:bg-[#13161f] rounded-2xl border border-slate-200/80 dark:border-slate-800/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
+        {/* Penawaran Diterima */}
+        <div className="rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121316] p-5 shadow-2xs space-y-3">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Penawaran Diterima</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Daftar penawaran dari supplier.</p>
+            <h3 className="text-xs font-bold text-slate-900 dark:text-zinc-100">Penawaran Diterima</h3>
+            <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-0.5">Daftar penawaran dari supplier.</p>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase border-b border-slate-100 dark:border-slate-800">
+                <tr className="border-b border-slate-100 dark:border-zinc-800/80 text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">
                   <th className="py-2.5 px-3">NO</th>
                   <th className="py-2.5 px-3">NAMA RFQ</th>
                   <th className="py-2.5 px-3">SUPPLIER</th>
@@ -824,24 +691,24 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
                   <th className="py-2.5 px-3 text-center">AKSI</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+              <tbody className="divide-y divide-slate-100 dark:divide-zinc-800/60">
                 {dummyQuotations.map((quo) => (
-                  <tr key={quo.no} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3 px-3 text-slate-400">{quo.no}</td>
-                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white whitespace-nowrap">{quo.rfqCode}</td>
-                    <td className="py-3 px-3 text-slate-700 dark:text-slate-300 whitespace-nowrap">{quo.supplier}</td>
-                    <td className="py-3 px-3 font-bold text-slate-900 dark:text-white whitespace-nowrap">{quo.total}</td>
-                    <td className="py-3 px-3 text-slate-500 whitespace-nowrap">{quo.date}</td>
+                  <tr key={quo.no} className="hover:bg-slate-50/60 dark:hover:bg-zinc-800/20 transition-colors">
+                    <td className="py-3 px-3 text-slate-400 dark:text-zinc-500 font-mono">{quo.no}</td>
+                    <td className="py-3 px-3 font-semibold text-slate-900 dark:text-zinc-100 whitespace-nowrap">{quo.rfqCode}</td>
+                    <td className="py-3 px-3 text-slate-700 dark:text-zinc-300 whitespace-nowrap">{quo.supplier}</td>
+                    <td className="py-3 px-3 font-mono text-slate-900 dark:text-zinc-100 whitespace-nowrap">{quo.total}</td>
+                    <td className="py-3 px-3 text-slate-500 dark:text-zinc-400 whitespace-nowrap">{quo.date}</td>
                     <td className="py-3 px-3 text-center">
                       <button 
                         onClick={() => {
                           onAddActivity(`Melihat penawaran dari ${quo.supplier} (${quo.total})`, 'Glace Commerce');
                           alert(`Detail Penawaran Resmi:\nNo: ${quo.rfqCode}\nSupplier: ${quo.supplier}\nTotal: ${quo.total}\nLead Time: ${quo.deliveryTime}`);
                         }}
-                        className="text-blue-600 hover:text-blue-700 p-1"
+                        className="text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-200 p-1 cursor-pointer"
                         title="Lihat Penawaran"
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>
@@ -852,135 +719,106 @@ export const GlaceCommerceModule: React.FC<CommerceProps> = ({
         </div>
       </div>
 
-      {/* Detail Modal Produk */}
+      {/* Modal Detail Produk */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#13161f] rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
-            <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200 dark:border-zinc-800 max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
               <div>
-                <span className={`text-[10px] font-bold tracking-wider uppercase ${selectedProduct.brandColor}`}>
-                  {selectedProduct.brand}
-                </span>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1">
-                  {selectedProduct.title}
-                </h3>
-                <p className="text-xs text-slate-400">{selectedProduct.sku}</p>
+                <span className="text-[10px] font-bold uppercase text-slate-400 dark:text-zinc-500">{selectedProduct.brand}</span>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">{selectedProduct.title}</h3>
               </div>
-              <button
-                type="button"
+              <button 
+                type="button" 
                 onClick={() => setSelectedProduct(null)}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="py-4 space-y-4">
-              <div className="h-44 w-full bg-slate-50 dark:bg-slate-800/40 rounded-xl p-4 flex items-center justify-center border border-slate-100 dark:border-slate-800">
-                <img 
-                  src={selectedProduct.imageUrl} 
-                  alt={selectedProduct.title} 
-                  className="max-h-full max-w-full object-contain"
-                />
+            <div className="space-y-3 text-xs">
+              <div className="h-32 bg-slate-50 dark:bg-[#181a20] rounded-xl flex items-center justify-center p-3">
+                <img src={selectedProduct.imageUrl} alt={selectedProduct.title} className="max-h-full max-w-full object-contain" />
               </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-500">Harga Satuan:</span>
-                  <span className="font-bold text-blue-600 text-sm">{selectedProduct.price}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-500">Kategori:</span>
-                  <span className="font-medium">{selectedProduct.category}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-500">Ketersediaan Stok:</span>
-                  <span className="font-medium text-emerald-600">{selectedProduct.stock}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-500">Estimasi Pengiriman:</span>
-                  <span className="font-medium">{selectedProduct.leadTime}</span>
-                </div>
-                <div className="pt-2">
-                  <span className="text-slate-500 block mb-1">Spesifikasi Teknik:</span>
-                  <p className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {selectedProduct.spec}
-                  </p>
-                </div>
+              <div>
+                <span className="text-slate-500 dark:text-zinc-400">Harga Satuan:</span>
+                <div className="text-base font-bold text-slate-900 dark:text-zinc-100">{selectedProduct.price}</div>
               </div>
+              <p className="text-slate-600 dark:text-zinc-400 text-[11px] leading-relaxed">
+                {selectedProduct.spec}
+              </p>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedProduct(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 cursor-pointer"
               >
                 Tutup
               </button>
               <button
                 type="button"
-                onClick={() => handleRequestQuote(selectedProduct)}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm"
+                onClick={() => {
+                  handleAddRFQ({
+                    title: `Pengadaan ${selectedProduct.title} (${selectedProduct.brand})`,
+                    itemsCount: 1,
+                    supplier: selectedProduct.brand,
+                    totalEstimated: selectedProduct.price,
+                    status: 'Menunggu',
+                    date: '20 November 2026'
+                  });
+                  setSelectedProduct(null);
+                }}
+                className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-900 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                Minta Penawaran (RFQ)
+                + Buat RFQ
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Detail Modal RFQ */}
+      {/* Modal Detail RFQ */}
       {selectedRfqDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#13161f] rounded-2xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl relative">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div>
-                <span className="text-[10px] font-mono font-bold text-blue-600 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded">
-                  {selectedRfqDetail.rfqCode}
-                </span>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                  {selectedRfqDetail.name}
-                </h3>
-              </div>
-              <button
-                type="button"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#121316] rounded-2xl border border-slate-200 dark:border-zinc-800 max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-zinc-800">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-zinc-100">Detail Permintaan Penawaran</h3>
+              <button 
+                type="button" 
                 onClick={() => setSelectedRfqDetail(null)}
-                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
-
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between py-1">
-                <span className="text-slate-500">Jumlah Item:</span>
-                <span className="font-semibold">{selectedRfqDetail.itemsCount} material industri</span>
+              <div className="flex justify-between py-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-slate-500 dark:text-zinc-400">Nomor RFQ:</span>
+                <span className="font-bold text-slate-900 dark:text-zinc-100">{selectedRfqDetail.rfqCode}</span>
               </div>
-              <div className="flex justify-between py-1">
-                <span className="text-slate-500">Status Tender:</span>
-                <span className="font-bold text-blue-600">{selectedRfqDetail.status}</span>
+              <div className="flex justify-between py-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-slate-500 dark:text-zinc-400">Deskripsi:</span>
+                <span className="text-slate-900 dark:text-zinc-100">{selectedRfqDetail.name}</span>
               </div>
-              <div className="flex justify-between py-1">
-                <span className="text-slate-500">Tanggal Diajukan:</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">{selectedRfqDetail.date}</span>
+              <div className="flex justify-between py-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-slate-500 dark:text-zinc-400">Jumlah Item:</span>
+                <span className="text-slate-900 dark:text-zinc-100">{selectedRfqDetail.itemsCount} unit</span>
               </div>
-              <div className="pt-2">
-                <span className="text-slate-500 block mb-1">Catatan Proyek:</span>
-                <p className="bg-slate-50 dark:bg-slate-800 p-2.5 rounded-lg text-slate-600 dark:text-slate-300">
-                  {selectedRfqDetail.notes}
-                </p>
+              <div className="flex justify-between py-1 border-b border-slate-100 dark:border-zinc-800">
+                <span className="text-slate-500 dark:text-zinc-400">Status:</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">{selectedRfqDetail.status}</span>
               </div>
             </div>
-
-            <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedRfqDetail(null)}
-                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
+                className="px-4 py-1.5 bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-lg text-xs font-semibold hover:bg-slate-200 dark:hover:bg-zinc-700 cursor-pointer"
               >
-                Selesai
+                Tutup
               </button>
             </div>
           </div>

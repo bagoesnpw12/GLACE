@@ -2,6 +2,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
+  /* =========================================================================
+     LIGHT MODE THEME TOKENS (TETAP 100% ORIGINAL - TIDAK DIUBAH SAMA SEKALI)
+     ========================================================================= */
   :root {
     --background: #ffffff;
     --foreground: #090B10;
@@ -37,50 +40,54 @@
     --card-hover: #f1f5f9;
   }
 
+  /* =========================================================================
+     DARK MODE THEME TOKENS (100% PURE MONOCHROME SEPERTI GAMBAR REFERENSI)
+     Hitam (#090a0d), Panel (#121316), Abu (#27272a, #71717a, #a1a1aa), Putih (#ffffff)
+     ========================================================================= */
   .dark {
-    --background: #090B10;
-    --foreground: #f8fafc;
-    --card: #11141d;
-    --card-foreground: #f8fafc;
-    --popover: #090B10;
-    --popover-foreground: #f8fafc;
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-    --secondary: #161b26;
-    --secondary-foreground: #f8fafc;
-    --muted: #161b26;
-    --muted-foreground: #94a3b8;
-    --accent: #161b26;
-    --accent-foreground: #f8fafc;
-    --destructive: #7f1d1d;
-    --destructive-foreground: #f8fafc;
-    --border: #1e222d;
-    --input: #1a1f2c;
-    --ring: #3b82f6;
+    --background: #090a0d;
+    --foreground: #f4f4f5;
+    --card: #121316;
+    --card-foreground: #f4f4f5;
+    --popover: #121316;
+    --popover-foreground: #f4f4f5;
+    --primary: #ffffff;
+    --primary-foreground: #090a0d;
+    --secondary: #18191f;
+    --secondary-foreground: #f4f4f5;
+    --muted: #18191f;
+    --muted-foreground: #a1a1aa;
+    --accent: #22232a;
+    --accent-foreground: #ffffff;
+    --destructive: #ffffff;
+    --destructive-foreground: #090a0d;
+    --border: #23252c;
+    --input: #1a1b20;
+    --ring: #ffffff;
 
-    --bg-main: #090B10;
-    --bg-card: #11141d;
-    --bg-sidebar: #090B10;
-    --bg-header: #090B10;
-    --bg-footer: #090B10;
-    --border-subtle: #1a1f2c;
-    --border-strong: #242b3d;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --card-hover: #161b26;
+    --bg-main: #090a0d;
+    --bg-card: #121316;
+    --bg-sidebar: #0c0d10;
+    --bg-header: #0c0d10;
+    --bg-footer: #0c0d10;
+    --border-subtle: #1e2026;
+    --border-strong: #2a2d36;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --card-hover: #17181e;
   }
 
   html {
     background-color: var(--bg-main);
     color: var(--text-primary);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   body {
     background-color: var(--bg-main);
     color: var(--text-primary);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
     @apply antialiased font-sans select-none;
   }
 
@@ -104,7 +111,9 @@
     background-color: var(--bg-main) !important;
   }
 
-  /* Dark mode overrides */
+  /* =========================================================================
+     DARK MODE: STRUKTUR DASAR CARDS & CONTAINER (Hanya aktif di .dark)
+     ========================================================================= */
   .dark .bg-white {
     background-color: var(--bg-card) !important;
   }
@@ -124,8 +133,10 @@
   .dark .bg-slate-900\/70,
   .dark .bg-slate-900\/80,
   .dark .bg-slate-950,
+  .dark .bg-\[\#090B10\],
   .dark .bg-\[\#0b0d13\],
   .dark .bg-\[\#0b0f17\],
+  .dark .bg-\[\#11141d\],
   .dark .bg-\[\#f8fafc\] {
     background-color: var(--bg-card) !important;
   }
@@ -142,6 +153,7 @@
   .dark .border-slate-800\/80,
   .dark .border-slate-800\/90,
   .dark .border-slate-900,
+  .dark .border-\[\#1a1f2c\],
   .dark .border-\[\#1e222d\] {
     border-color: var(--border-subtle) !important;
   }
@@ -161,26 +173,164 @@
     color: var(--text-muted) !important;
   }
 
+  /* =========================================================================
+     DARK MODE: TRANSFORMASI MENYELURUH SEMUA WARNA MENJADI MONOKROM
+     (Biru, Merah, Kuning, Oranye, Hijau, Ungu, Teal, Rose, Emerald -> Monokrom)
+     ========================================================================= */
+  .dark [class*="text-blue-"],
+  .dark [class*="text-indigo-"],
+  .dark [class*="text-teal-"],
+  .dark [class*="text-cyan-"],
+  .dark [class*="text-amber-"],
+  .dark [class*="text-orange-"],
+  .dark [class*="text-yellow-"],
+  .dark [class*="text-emerald-"],
+  .dark [class*="text-green-"],
+  .dark [class*="text-purple-"],
+  .dark [class*="text-violet-"],
+  .dark [class*="text-rose-"],
+  .dark [class*="text-red-"] {
+    color: #e4e4e7 !important;
+  }
+
+  .dark [class*="bg-blue-"],
+  .dark [class*="bg-indigo-"],
+  .dark [class*="bg-teal-"],
+  .dark [class*="bg-cyan-"],
+  .dark [class*="bg-amber-"],
+  .dark [class*="bg-orange-"],
+  .dark [class*="bg-yellow-"],
+  .dark [class*="bg-emerald-"],
+  .dark [class*="bg-green-"],
+  .dark [class*="bg-purple-"],
+  .dark [class*="bg-violet-"],
+  .dark [class*="bg-rose-"],
+  .dark [class*="bg-red-"] {
+    background-color: #27272a !important;
+    color: #ffffff !important;
+  }
+
+  .dark [class*="border-blue-"],
+  .dark [class*="border-indigo-"],
+  .dark [class*="border-teal-"],
+  .dark [class*="border-cyan-"],
+  .dark [class*="border-amber-"],
+  .dark [class*="border-orange-"],
+  .dark [class*="border-yellow-"],
+  .dark [class*="border-emerald-"],
+  .dark [class*="border-green-"],
+  .dark [class*="border-purple-"],
+  .dark [class*="border-violet-"],
+  .dark [class*="border-rose-"],
+  .dark [class*="border-red-"] {
+    border-color: #3f3f46 !important;
+  }
+
+  /* Status Dots & Bullets menjadi Monokrom di Dark Mode */
+  .dark span[class*="rounded-full"][class*="bg-blue-"]:not(.glace-table-pill *),
+  .dark span[class*="rounded-full"][class*="bg-red-"]:not(.glace-table-pill *),
+  .dark span[class*="rounded-full"][class*="bg-amber-"]:not(.glace-table-pill *),
+  .dark span[class*="rounded-full"][class*="bg-emerald-"]:not(.glace-table-pill *),
+  .dark span[class*="rounded-full"][class*="bg-green-"]:not(.glace-table-pill *),
+  .dark div[class*="rounded-full"][class*="bg-red-"],
+  .dark div[class*="rounded-full"][class*="bg-blue-"],
+  .dark div[class*="rounded-full"][class*="bg-amber-"] {
+    background-color: #d4d4d8 !important;
+  }
+
+  /* Kapsul Status Tabel GLACE di Dark Mode: Latar Gelap, Garis Halus Gelap, Teks Putih Terang Jelas */
+  .dark .glace-table-pill,
+  .dark span[class*="rounded-full"][class*="border"].glace-table-pill {
+    background-color: #16171d !important;
+    color: #f4f4f5 !important;
+    border-color: #27272a !important;
+  }
+
+  .dark .glace-table-pill span {
+    color: #f4f4f5 !important;
+  }
+
+  .dark .glace-table-pill span[class*="rounded-full"] {
+    background-color: #a1a1aa !important;
+  }
+
+  /* Progress Bars & Metric Fill Bars di Dark Mode */
+  .dark div[class*="rounded-full"][class*="bg-blue-500"],
+  .dark div[class*="rounded-full"][class*="bg-blue-600"],
+  .dark div[class*="rounded-full"][class*="bg-red-500"],
+  .dark div[class*="rounded-full"][class*="bg-emerald-500"],
+  .dark div[class*="rounded-full"][class*="bg-green-500"] {
+    background-color: #ffffff !important;
+  }
+
+  /* Semua Diagram Grafis SVG di Dark Mode (Recharts & SVG Murni) */
+  .dark svg circle[stroke]:not([stroke="transparent"]):not([stroke="currentColor"]) {
+    stroke: #d4d4d8 !important;
+  }
+  .dark svg circle[stroke="#dc2626"],
+  .dark svg circle[stroke="#ef4444"],
+  .dark svg circle[stroke="#b91c1c"] {
+    stroke: #52525b !important;
+  }
+  .dark svg circle[stroke="#94a3b8"],
+  .dark svg circle[stroke="#cbd5e1"] {
+    stroke: #8e919a !important;
+  }
+  .dark svg circle[stroke="#3b82f6"],
+  .dark svg circle[stroke="#2563eb"],
+  .dark svg circle[stroke="#60a5fa"] {
+    stroke: #ffffff !important;
+  }
+
+  .dark svg path[stroke]:not([stroke="none"]):not([stroke="currentColor"]) {
+    stroke: #d4d4d8 !important;
+  }
+  .dark svg path.recharts-curve[stroke="#3B82F6"],
+  .dark svg path.recharts-curve[stroke="#2563eb"],
+  .dark svg path.recharts-curve[stroke="#60a5fa"] {
+    stroke: #ffffff !important;
+  }
+  .dark svg path.recharts-curve[stroke="#EF4444"],
+  .dark svg path.recharts-curve[stroke="#dc2626"] {
+    stroke: #71717a !important;
+  }
+  .dark svg path.recharts-curve[stroke="#E5E7EB"] {
+    stroke: #d4d4d8 !important;
+  }
+
+  /* Recharts Bar Fills & Area Fills di Dark Mode */
+  .dark svg path.recharts-rectangle[fill="#2563eb"],
+  .dark svg path.recharts-rectangle[fill="#3b82f6"],
+  .dark svg path.recharts-rectangle[fill="#60a5fa"],
+  .dark svg .recharts-bar-rectangle path {
+    fill: #e4e4e7 !important;
+  }
+  .dark svg .recharts-area-area {
+    fill: #27272a !important;
+    fill-opacity: 0.3 !important;
+  }
+
   .dark .hover\:bg-slate-50:hover,
   .dark .hover\:bg-slate-50\/70:hover,
   .dark .hover\:bg-slate-50\/60:hover,
   .dark .hover\:bg-slate-100:hover,
   .dark .hover\:bg-slate-800:hover,
-  .dark .hover\:bg-slate-800\/60:hover {
+  .dark .hover\:bg-slate-800\/60:hover,
+  .dark .hover\:bg-\[\#272b38\]:hover {
     background-color: var(--card-hover) !important;
   }
 
   .dark input,
   .dark textarea,
   .dark select {
-    background-color: #131722 !important;
-    color: #f8fafc !important;
+    background-color: #16171d !important;
+    color: #f4f4f5 !important;
     border-color: var(--border-strong) !important;
   }
 
   .dark input::placeholder,
   .dark textarea::placeholder {
-    color: #64748b !important;
+    color: #71717a !important;
   }
 
   /* Light mode form controls */
@@ -208,7 +358,7 @@
 }
 
 .dark * {
-  scrollbar-color: rgba(100, 116, 139, 0.4) transparent;
+  scrollbar-color: rgba(113, 113, 122, 0.4) transparent;
 }
 
 /* Untuk Webkit (Chrome, Safari, Edge) */
@@ -232,11 +382,11 @@
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.4);
+  background: rgba(113, 113, 122, 0.3);
 }
 
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.55);
+  background: rgba(161, 161, 170, 0.5);
 }
 
 /* Class pembantu khusus scroll container panel percakapan */
@@ -246,7 +396,7 @@
 }
 
 /* =========================================================================
-   INFINITE MARQUEE CAROUSEL (Move Right Seamless Looping)
+   INFINITE MARQUEE CAROUSEL
    ========================================================================= */
 @keyframes scrollRight {
   0% {
@@ -277,12 +427,6 @@
 
 /* =========================================================================
    INTERACTIVE FLOATING HOVER CARD (PREMIUM ENTERPRISE GLACE)
-   - translateY(-4px)
-   - Natural elevated soft shadow
-   - Smooth 250ms cubic-bezier transition
-   - Border slightly lighter on hover
-   - Touch screen media query (hover: hover and pointer: fine)
-   - prefers-reduced-motion support
    ========================================================================= */
 .glace-floating-card,
 .glace-card-interactive {
@@ -297,16 +441,16 @@
   .glace-floating-card:hover,
   .glace-card-interactive:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.5), 
-                0 4px 10px -2px rgba(255, 255, 255, 0.03);
-    border-color: #333b4f !important;
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.12), 
+                0 4px 10px -2px rgba(0, 0, 0, 0.04);
+    border-color: #cbd5e1 !important;
   }
 
   .dark .glace-floating-card:hover,
   .dark .glace-card-interactive:hover {
-    box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.65), 
-                0 4px 12px -2px rgba(255, 255, 255, 0.04);
-    border-color: #333b4f !important;
+    box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.7), 
+                0 4px 12px -2px rgba(255, 255, 255, 0.03);
+    border-color: #333642 !important;
   }
 }
 
@@ -319,4 +463,3 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
   }
 }
-

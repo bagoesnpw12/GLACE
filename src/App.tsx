@@ -236,6 +236,8 @@ function AppContent() {
     localStorage.removeItem('glace_user_name');
     localStorage.removeItem('glace_is_trial');
     localStorage.removeItem('glace_trial_text');
+    localStorage.removeItem('glace_trial_id');
+    localStorage.removeItem('glace_jwt_token');
 
     setViewMode('landing');
     setCurrentTab('dashboard');

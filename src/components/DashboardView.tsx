@@ -21,6 +21,15 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { ActivityItem } from '../types';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+  TablePill
+} from './ui/table';
 
 interface DashboardViewProps {
   userName: string;
@@ -515,75 +524,62 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </motion.div>
 
-      {/* 5. Section Aktivitas Terbaru (Floating Interaktif pada Kartu Utama & Baris Tabel) */}
-      <motion.div 
-        variants={itemVariants}
-        whileHover={{ y: -2, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } }}
-        className="glace-card-interactive bg-white dark:bg-[#11141d] rounded-2xl border border-slate-200/90 dark:border-[#1a1f2c] shadow-2xs overflow-hidden"
-      >
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
-          <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">
+      {/* 5. Section Aktivitas Terbaru (Standard GLACE Table Design) */}
+      <div className="bg-white dark:bg-[#11141d] rounded-xl border border-slate-200/90 dark:border-zinc-800/80 shadow-xs overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-200/80 dark:border-zinc-800/80 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white tracking-tight">
             Aktivitas Terbaru
           </h2>
-          <span className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">
+          <span className="text-xs text-slate-500 dark:text-zinc-400">
             Sinkronisasi otomatis
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800/80 text-[11px] font-semibold text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-slate-800/20">
-                <th className="py-3 px-6">WAKTU</th>
-                <th className="py-3 px-6">AKTIVITAS</th>
-                <th className="py-3 px-6">MODUL</th>
-                <th className="py-3 px-6">STATUS</th>
-                <th className="py-3 px-6 text-right">AKSI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-[12px] sm:text-[13px]">
-              {activities.map((act) => {
-                const isSukses = act.status === 'Success';
-                return (
-                  <tr key={act.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
-                    <td className="py-3.5 px-6 font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                      {act.time}
-                    </td>
-                    <td className="py-3.5 px-6 font-medium text-slate-800 dark:text-slate-200">
-                      <div className="flex items-center gap-2.5">
-                        {act.iconType === 'wbs' && <FileText className="w-4 h-4 text-blue-500 shrink-0" />}
-                        {act.iconType === 'document' && <FileText className="w-4 h-4 text-amber-500 shrink-0" />}
-                        {act.iconType === 'asset' && <Activity className="w-4 h-4 text-teal-400 shrink-0" />}
-                        {act.iconType === 'rfq' && <ShoppingCart className="w-4 h-4 text-emerald-400 shrink-0" />}
-                        {act.iconType === 'academy' && <GraduationCap className="w-4 h-4 text-purple-400 shrink-0" />}
-                        <span>{act.activity}</span>
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-6 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+        <Table>
+          <TableHeader>
+            <TableRow className="h-10">
+              <TableHead className="w-36">WAKTU</TableHead>
+              <TableHead>AKTIVITAS</TableHead>
+              <TableHead className="w-48">MODUL</TableHead>
+              <TableHead className="w-32">STATUS</TableHead>
+              <TableHead className="w-16 text-right">AKSI</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {activities.map((act) => {
+              const isSukses = act.status === 'Success';
+              return (
+                <TableRow key={act.id}>
+                  <TableCell className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px] whitespace-nowrap">
+                    {act.time}
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-800 dark:text-zinc-100">
+                    <div className="flex items-center gap-2">
+                      <span>{act.activity}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-slate-600 dark:text-zinc-300">
+                    <TablePill variant="default">
                       {act.module}
-                    </td>
-                    <td className="py-3.5 px-6 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1.5 font-medium ${
-                        isSukses ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          isSukses ? 'bg-emerald-500' : 'bg-amber-400'
-                        }`} />
-                        {isSukses ? 'Sukses' : 'Tertunda'}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-6 text-right">
-                      <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md transition-colors">
-                        <MoreHorizontal className="w-4 h-4 inline-block" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
+                    </TablePill>
+                  </TableCell>
+                  <TableCell>
+                    <TablePill variant={isSukses ? 'default' : 'default'}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${isSukses ? 'bg-zinc-400 dark:bg-zinc-300' : 'bg-zinc-400 dark:bg-zinc-400'}`} />
+                      <span>{isSukses ? 'Selesai' : 'Proses'}</span>
+                    </TablePill>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <button className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-md transition-colors cursor-pointer">
+                      <MoreHorizontal className="w-4 h-4 inline-block" />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </motion.div>
   );
 };
